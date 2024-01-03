@@ -28,6 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [linux/amd64, linux/arm64]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -150,7 +151,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
+          name: pigz-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
           path: artifacts/*
           retention-days: 60
 
@@ -219,12 +220,8 @@ jobs:
         working-directory: artifacts
         run: |
           ls -la
-          # Moving crun
-          for i in wasm-crun*; do echo "Crun: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
-          # Rename youki
-          for i in wasm-youki*; do echo "Youki: ${i}"; mv -- "$i" "youki-${{ steps.metadata.outputs.YOUKI_REPO_HASH }}-${i:17}"; done
-          # Archive youki
-          for i in youki*; do tar -cvzf $i.tar.gz $i; rm -rf $i; done
+          for i in wasm-crun*; do echo "Found ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
+          for i in pigz*; do echo "Found ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           ls -la
 
       - name: Generate artifact attestation

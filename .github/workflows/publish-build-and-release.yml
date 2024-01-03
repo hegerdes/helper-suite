@@ -82,13 +82,16 @@ jobs:
           path: artifacts/*
           retention-days: 60
 
-  Build-Youki:
-    runs-on: ubuntu-24.04
-    continue-on-error: true
+  Build-Pigz:
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         arch: [linux/amd64, linux/arm64]
+        exclude:
+          - os: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,27 +119,33 @@ jobs:
         run: |
           echo "YOUKI_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
-          echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')" >> "$GITHUB_OUTPUT"
+          if [[ "${{ matrix.os }}"== *"windows"* ]]; then
+            echo "RELEASE_ARTIFACT=$(echo windows)" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_ARTIFACT=$(echo windows)"
+          else
+            echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')"
+          fi
 
       - name: Create artifact dir
         run: mkdir -p artifacts
 
-      - name: Build youki
-        uses: docker/build-push-action@v6
+      - name: Pigz build
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: docker/build-push-action@v5
         with:
           load: true
           context: scripts
-          file: scripts/Dockerfile.youki
-          tags: ${{ matrix.arch }}/wasmyouki:latest
+          file: scripts/Dockerfile.pigz
+          tags: linux/pigz:latest
           platforms: ${{ matrix.arch }}
-          shm-size: 12g
-          build-args: YoukiVersion=${{ steps.releases.outputs.YOUKI_TAG }}
+          build-args: PigzVersion=${{ steps.releases.outputs.PIGZ_TAG }}
 
       - name: Inspect and extract artifacts
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          docker image inspect ${{ matrix.arch }}/wasmyouki:latest
-          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmyouki bash -c 'cp -rav /builder/youki/youki /export/youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}'
-          sudo chmod +x $GITHUB_WORKSPACE/artifacts/*
+          docker image inspect linux/pigz:latest
+          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export linux/pigz:latest bash -c 'cp -rv /builder/*.tar.gz /export/'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

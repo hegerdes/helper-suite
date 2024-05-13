@@ -224,11 +224,19 @@ jobs:
           for i in pigz*; do echo "Found ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           ls -la
 
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
-        continue-on-error: true
-        with:
-          subject-path: artifacts/crun*
+      # - name: Release
+      #   id: release
+      #   if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     name: "Artifacts: Crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}"
+      #     tag_name: v${{ steps.metadata.outputs.RELEASE_VERSION }}
+      #     fail_on_unmatched_files: true
+      #     body: |
+      #       These are unofficial periodic release of different tools with extra configuration than the official ons.
+      #       Included are:
+      #         * [crun](https://github.com/containers/crun)
+      #         * [pigz](https://github.com/madler/pigz)
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
@@ -236,41 +244,13 @@ jobs:
         with:
           subject-path: artifacts/youki*
 
-      - name: Release
-        id: release
-        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "Artifacts: Crun;Youki;Kube-Etcd"
-          tag_name: v${{ steps.metadata.outputs.RELEASE_VERSION }}
-          fail_on_unmatched_files: true
-          body: |
-            These are unofficial periodic release of different tools with extra configuration than the official ones.
-            Included are:
-              * [crun](https://github.com/containers/crun)
-              * [youki](https://github.com/youki-dev/youki)
-              * [kube-etcd](https://kubernetes.io/)
+      #       The libs in the archive need to be added to your system LIBs PATH.
+      #       See these [instructions](https://blog.andrewbeacock.com/2007/10/how-to-add-shared-libraries-to-linuxs.html) for how-to do so.
+      #       Also the package libyajl2 is requiered.
 
-            ## Crun - wasm
-            It is build with wasm support and only for the amd64/arm64 arch.
-            This release was build at [crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}](https://github.com/containers/crun/tree/${{ steps.metadata.outputs.CRUN_REPO_HASH }})
+      #       ## Pigz
+      #       Static linked binary for x86 (Linux & Windows) and arm (Linux only) that does gzip compression with multithredding.
+      #       This release was build at [crun@${{ steps.metadata.outputs.PIGZ_REPO_HASH }}](https://github.com/madler/pigz/tree/${{ steps.metadata.outputs.PIGZ_REPO_HASH }})
 
-            The libs in the archive need to be added to your system LIBs PATH.
-            See these [instructions](https://blog.andrewbeacock.com/2007/10/how-to-add-shared-libraries-to-linuxs.html) for how-to do so.
-            Also the package libyajl2 is requiered.
-
-            ## Youki - wasm
-            It is build with wasm support and only for the amd64/arm64 arch.
-            This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/youki-dev/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
-
-            For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
-            `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
-
-            ## Kube-Etcd
-            A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.
-            This image is inteded to be used for testing in local and CI setups to have a fully working kubernetes api as an endpint. Certs are generated automaticly on startup, if they are not externaly mounted.
-
-            Note that the container behaves like a nomal kubernetes api but can not spawn pods.
-            Images can be found on [DockerHub](https://hub.docker.com/r/hegerdes/kubernetes-etcd)
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: artifacts/*
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: artifacts/*

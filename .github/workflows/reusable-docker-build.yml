@@ -138,6 +138,9 @@ jobs:
       DOCKER_DIGEST: ${{ steps.build-and-push.outputs.digest }}
     runs-on: ${{ inputs.runner }}
     environment: ${{ inputs.environment }}
+    env:
+      DOCKER_BUILD_RECORD_UPLOAD: false
+      GH_WORKFLOW_ACTOR: "${{ github.actor }}"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

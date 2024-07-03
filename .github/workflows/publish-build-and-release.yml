@@ -18,7 +18,7 @@ permissions:
 
 env:
   # Download artefacts fails if summery upload is on
-  DOCKER_BUILD_RECORD_UPLOAD: "false"
+  DOCKER_BUILD_RECORD_UPLOAD: false
 
 jobs:
   Build-Crun:

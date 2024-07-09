@@ -149,7 +149,8 @@ jobs:
       fail-fast: false
       matrix:
         version: ["1.30.2", "1.29.6", "1.28.10"]
-    uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
+    # uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
+    uses: ./.github/workflows/reusable-docker-build.yml
     with:
       build-name: ${{ github.repository_owner }}/kubernetes-etcd
       build-tags: |

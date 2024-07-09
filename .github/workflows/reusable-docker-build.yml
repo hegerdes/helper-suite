@@ -150,6 +150,7 @@ jobs:
       - name: Set ENVs
         id: env-setup
         run: |
+          DOCKER_IMAGE_TAGS=$(echo "$DOCKER_IMAGE_TAGS" | head -n 1)
           export DOCKER_IMAGE_NAME="${DOCKER_IMAGE_NAMES%%,*}"
           export DOCKER_IMAGE_TAG="${DOCKER_IMAGE_TAGS%%,*}"
           echo "DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
@@ -254,6 +255,7 @@ jobs:
       - name: Set ENVs
         id: env-setup
         run: |
+          DOCKER_IMAGE_TAGS=$(echo "$DOCKER_IMAGE_TAGS" | head -n 1)
           export DOCKER_IMAGE_NAME="${DOCKER_IMAGE_NAMES%%,*}"
           export DOCKER_IMAGE_TAG="${DOCKER_IMAGE_TAGS%%,*}"
           echo "DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
@@ -324,6 +326,7 @@ jobs:
       - name: Set ENVs
         id: env-setup
         run: |
+          DOCKER_IMAGE_TAGS=$(echo "$DOCKER_IMAGE_TAGS" | head -n 1)
           export DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAMES%%,*}"
           export DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAGS%%,*}"
           echo "DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}" >> "$GITHUB_OUTPUT"

@@ -15,10 +15,11 @@ RUN echo "Downloading Binaries" \
     && tar -xzvf /tmp/kube-apiserver.tar.gz -C /usr/local/bin --strip-components=3 kubernetes/server/bin/kube-apiserver \
     && tar -xzvf /tmp/etcd.tar.gz -C /usr/local/bin --strip-components=1 etcd-v${ETCD_VERSION}-linux-${ARCH}/etcd \
     && chmod +x /usr/bin/kubectl \
+    && kube-apiserver --version \
+    && etcd --version \
     && rm -rf /tmp
 
 COPY kube-start.sh csr.conf /
-
 EXPOSE 2379
 EXPOSE 6443
 ENTRYPOINT [ "/kube-start.sh" ]

@@ -149,14 +149,13 @@ jobs:
       fail-fast: false
       matrix:
         version: ["1.30.2", "1.29.6", "1.28.10"]
-    # uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
-    uses: ./.github/workflows/reusable-docker-build.yml
+    uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
     with:
       build-name: ${{ github.repository_owner }}/kubernetes-etcd
       build-tags: |
         v${{ matrix.version }}
         ${{ (contains(matrix.version, '1.30.2') && 'latest' ) || '' }}
-      build-args: COMMIT_HASH=${{ github.sha }},COMMIT_TAG=${{ github.ref_name }},KUBE_VERSION=${{ matrix.version }}
+      build-args: KUBE_VERSION=${{ matrix.version }}
       build-labels: MAINTAINER=${{ github.repository_owner }}
       build-dockerfile: scripts/Dockerfile.kube
       build-context: scripts

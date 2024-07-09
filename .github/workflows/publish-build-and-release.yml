@@ -144,6 +144,26 @@ jobs:
           path: artifacts/*
           retention-days: 60
 
+  Build-Kube-Etcd:
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["1.30.2", "1.29.6", "1.28.10"]
+    uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
+    with:
+      build-name: ${{ github.repository_owner }}/kubernetes-etcd
+      build-tags: |
+        v${{ matrix.version }}
+        ${{ (contains(matrix.version, '1.30.2') && 'latest' ) || '' }}
+      build-args: KUBE_VERSION=${{ matrix.version }}
+      build-labels: MAINTAINER=${{ github.repository_owner }}
+      build-dockerfile: scripts/Dockerfile.kube
+      build-context: scripts
+      build-platforms: linux/amd64,linux/arm64
+    secrets:
+      REGISTRY_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      REGISTRY_PW: ${{ secrets.DOCKERHUB_TOKEN }}
+
   Release:
     runs-on: ubuntu-latest
     needs: [Build-Crun, Build-Youki]

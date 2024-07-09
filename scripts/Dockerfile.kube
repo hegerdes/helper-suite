@@ -1,0 +1,24 @@
+FROM debian:bookworm-slim
+ARG KUBE_VERSION=1.30.2
+ARG ETCD_VERSION=3.5.14
+
+# Install dev deps
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN apt-get update -qq && apt-get install -y -qq \
+    ca-certificates curl tar gzip openssl
+
+RUN echo "Downloading Binaries" \
+    && if [ "$(uname -m)" = "x86_64" ]; then export ARCH=amd64; else export ARCH=arm64; fi \
+    && curl -sL -o /tmp/kube-apiserver.tar.gz https://dl.k8s.io/v${KUBE_VERSION}/kubernetes-server-linux-${ARCH}.tar.gz \
+    && curl -sL -o /tmp/etcd.tar.gz https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-${ARCH}.tar.gz \
+    && curl -sL --output /usr/bin/kubectl "https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/${ARCH}/kubectl" \
+    && tar -xzvf /tmp/kube-apiserver.tar.gz -C /usr/local/bin --strip-components=3 kubernetes/server/bin/kube-apiserver \
+    && tar -xzvf /tmp/etcd.tar.gz -C /usr/local/bin --strip-components=1 etcd-v${ETCD_VERSION}-linux-${ARCH}/etcd \
+    && chmod +x /usr/bin/kubectl \
+    && rm -rf /tmp
+
+COPY kube-start.sh csr.conf /
+
+EXPOSE 2379
+EXPOSE 6443
+ENTRYPOINT [ "/kube-start.sh" ]

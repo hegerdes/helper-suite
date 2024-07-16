@@ -4,7 +4,7 @@ ARG ETCD_VERSION=3.5.14
 
 # Install dev deps
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN apt-get update -qq && apt-get install -y -qq \
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl tar gzip openssl
 
 RUN echo "Downloading Binaries" \

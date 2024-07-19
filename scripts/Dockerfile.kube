@@ -1,5 +1,5 @@
 FROM debian:bookworm-slim
-ARG KUBE_VERSION=1.30.2
+ARG KUBE_VERSION=1.30.3
 ARG ETCD_VERSION=3.5.14
 
 # Install dev deps

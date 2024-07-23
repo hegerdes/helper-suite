@@ -74,6 +74,7 @@ jobs:
         run: |
           docker image inspect ${{ matrix.arch }}/wasmcrun:latest
           docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmcrun bash -c 'cp -rv /builder/*.tar.gz /export/'
+          chmod +x $GITHUB_WORKSPACE/artifacts/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -136,6 +137,7 @@ jobs:
         run: |
           docker image inspect ${{ matrix.arch }}/wasmyouki:latest
           docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmyouki bash -c 'cp -rav /builder/youki/youki /export/youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}'
+          chmod +x $GITHUB_WORKSPACE/artifacts/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

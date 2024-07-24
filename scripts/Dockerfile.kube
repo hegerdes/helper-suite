@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 ARG KUBE_VERSION=1.30.3
-ARG ETCD_VERSION=3.5.14
+ARG ETCD_VERSION=3.5.15
 
 # Install dev deps
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

@@ -74,7 +74,6 @@ jobs:
         run: |
           docker image inspect ${{ matrix.arch }}/wasmcrun:latest
           docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmcrun bash -c 'cp -rv /builder/*.tar.gz /export/'
-          chmod +x $GITHUB_WORKSPACE/artifacts/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -137,7 +136,7 @@ jobs:
         run: |
           docker image inspect ${{ matrix.arch }}/wasmyouki:latest
           docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmyouki bash -c 'cp -rav /builder/youki/youki /export/youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}'
-          chmod +x $GITHUB_WORKSPACE/artifacts/*
+          sudo chmod +x $GITHUB_WORKSPACE/artifacts/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -259,5 +258,11 @@ jobs:
 
             For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
             `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
+
+            ## Kube-Etcd
+            A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.
+            This image is inteded to be used for testing in local and CI setups to have a fully working kubernetes api as an endpint. Certs are generated automaticly on startup, they are not externaly mounted.
+
+            Note that the container behaves like a nomal kubernetes api but can not spawn pods. Images can be found on [DockerHub](https://hub.docker.com/r/hegerdes/kubernetes-etcd)
           token: ${{ secrets.GITHUB_TOKEN }}
           files: artifacts/*

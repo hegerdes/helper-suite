@@ -149,13 +149,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.30.3", "1.29.7", "1.28.12"]
+        version: ["1.31.0", "1.30.4", "1.29.8"]
     uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
     with:
       build-name: ${{ github.repository_owner }}/kubernetes-etcd
       build-tags: |
         v${{ matrix.version }}
-        ${{ (contains(matrix.version, '1.30.3') && 'latest' ) || '' }}
+        ${{ (contains(matrix.version, '1.31.0') && 'latest' ) || '' }}
       build-args: KUBE_VERSION=${{ matrix.version }}
       build-labels: MAINTAINER=${{ github.repository_owner }}
       build-dockerfile: scripts/Dockerfile.kube
@@ -243,8 +243,9 @@ jobs:
             Included are:
               * [crun](https://github.com/containers/crun)
               * [youki](https://github.com/containers/youki)
+              * [kube-etcd](https://kubernetes.io/)
 
-            ## Crun
+            ## Crun - wasm
             It is build with wasm support and only for the amd64/arm64 arch.
             This release was build at [crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}](https://github.com/containers/crun/tree/${{ steps.metadata.outputs.CRUN_REPO_HASH }})
 
@@ -252,7 +253,7 @@ jobs:
             See these [instructions](https://blog.andrewbeacock.com/2007/10/how-to-add-shared-libraries-to-linuxs.html) for how-to do so.
             Also the package libyajl2 is requiered.
 
-            ## Youki
+            ## Youki - wasm
             It is build with wasm support and only for the amd64/arm64 arch.
             This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/containers/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
 
@@ -261,8 +262,9 @@ jobs:
 
             ## Kube-Etcd
             A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.
-            This image is inteded to be used for testing in local and CI setups to have a fully working kubernetes api as an endpint. Certs are generated automaticly on startup, they are not externaly mounted.
+            This image is inteded to be used for testing in local and CI setups to have a fully working kubernetes api as an endpint. Certs are generated automaticly on startup, if they are not externaly mounted.
 
-            Note that the container behaves like a nomal kubernetes api but can not spawn pods. Images can be found on [DockerHub](https://hub.docker.com/r/hegerdes/kubernetes-etcd)
+            Note that the container behaves like a nomal kubernetes api but can not spawn pods.
+            Images can be found on [DockerHub](https://hub.docker.com/r/hegerdes/kubernetes-etcd)
           token: ${{ secrets.GITHUB_TOKEN }}
           files: artifacts/*

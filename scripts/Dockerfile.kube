@@ -22,4 +22,5 @@ RUN echo "Downloading Binaries" \
 COPY kube-start.sh csr.conf /
 EXPOSE 2379
 EXPOSE 6443
+VOLUME /etcd-data
 ENTRYPOINT [ "/kube-start.sh" ]

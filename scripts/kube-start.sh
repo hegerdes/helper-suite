@@ -79,7 +79,7 @@ trap 'echo "Script is terminating..."; kill $KUBE_APISERVER_PID; kill $ETCD_PID;
 
 /usr/local/bin/etcd \
     --data-dir \
-    /etcd-data \
+    $ETCD_DATA \
     --name \
     demo-etcd \
     --advertise-client-urls \

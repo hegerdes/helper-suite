@@ -1,11 +1,10 @@
-FROM debian:bookworm-slim
-ARG KUBE_VERSION=1.31.0
-ARG ETCD_VERSION=3.5.15
+FROM alpine:3.20 AS build
+ARG KUBE_VERSION=1.31.1
+ARG ETCD_VERSION=3.5.16
 
 # Install dev deps
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
-    ca-certificates curl tar gzip openssl
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+RUN apk add --no-cache ca-certificates curl tar openssl bash
 
 RUN echo "Downloading Binaries" \
     && if [ "$(uname -m)" = "x86_64" ]; then export ARCH=amd64; else export ARCH=arm64; fi \

@@ -149,7 +149,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.31.0", "1.30.4", "1.29.8"]
+        version: ["1.31.1", "1.30.5", "1.29.9"]
     uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
     with:
       build-name: ${{ github.repository_owner }}/kubernetes-etcd
@@ -166,7 +166,7 @@ jobs:
       REGISTRY_PW: ${{ secrets.DOCKERHUB_TOKEN }}
 
   Release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [Build-Crun, Build-Youki]
     permissions:
       contents: write

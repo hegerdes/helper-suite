@@ -1,0 +1,24 @@
+services:
+  k8s:
+    image: hegerdes/kubernetes-etcd
+    build:
+      context: .
+      dockerfile: Dockerfile.kube
+    container_name: kube-test
+    restart: unless-stopped
+    volumes:
+      - etcddata:/etcd-data
+      - certs:/tmp/certs
+    ports:
+      - 6443:6443
+    # environment:
+    #   # Custmise the following environment variables
+    #   # Format see: https://kubernetes.io/docs/reference/access-authn-authz/authentication/#static-token-file
+    #   USER_TOKENS: 31ada4fd-adec-460c-809a-9e56ceb75269,admin,admin,system:masters
+    #   CERTS_DIR: /tmp/certs
+    #   ETCD_DATA: /etcd-data
+    #   KUBE_APISERVER_EXTRA_ARGS: --audit-log-path="-"
+
+volumes:
+  etcddata: {}
+  certs: {}

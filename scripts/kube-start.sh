@@ -11,6 +11,8 @@ ETCD_DATA=${ETCD_DATA:-/etcd-data}
 CLUSTER_NAME=${CLUSTER_NAME:-demo}
 USER_TOKENS=${USER_TOKENS:-$DEFAULT_USER_TOKENS}
 K8S_CURRENT_SERVER=${K8S_CURRENT_SERVER:-"https://localhost:6443"}
+EXTERNAL_HOST=${EXTERNAL_HOST:-$(hostname)}
+KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
 mkdir -p $CERTS_DIR
 mkdir -p $ETCD_DATA
 
@@ -98,11 +100,12 @@ kube-apiserver \
     --tls-private-key-file=$CERTS_DIR/kube-apiserver.key \
     --tls-cert-file=$CERTS_DIR/kube-apiserver.crt \
     --client-ca-file=$CERTS_DIR/ca.crt \
-    --bind-address=0.0.0.0 \
+    --bind-address=:: \
     --enable-bootstrap-token-auth \
+    --external-hostname=$EXTERNAL_HOST \
     --secure-port=6443 \
     --token-auth-file=$CERTS_DIR/token.csv \
-    --authorization-mode=Node,RBAC &
+    --authorization-mode=Node,RBAC $KUBE_APISERVER_EXTRA_ARGS &
 KUBE_APISERVER_PID=$!
 
 sleep 7d

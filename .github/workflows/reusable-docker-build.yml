@@ -23,7 +23,7 @@ on:
         type: string
         required: true
       build-tags:
-        description: "The tags for the Docker-Image. Needs to be newline seperated."
+        description: "The tags for the Docker-Image. Needs to be seperated by ',' or newline."
         type: string
         required: true
       build-args:
@@ -65,6 +65,11 @@ on:
         description: "Extra commands run in the workflow"
         default: ""
         type: string
+        required: false
+      sign-with-github:
+        description: "If container should be signed with GitHub provenance"
+        default: false
+        type: boolean
         required: false
       scan-image:
         description: "If image should be scaned for vulnerabilities"
@@ -213,7 +218,8 @@ jobs:
           tags: ${{ inputs.build-tags }}
           labels: ${{ inputs.build-labels }}
 
-      - name: Run passed commands
+      - name: Run passed extra commands
+        if: inputs.extra-commands != ''
         run: bash -c "${{ inputs.extra-commands }}"
 
       - name: Build and push Docker image
@@ -232,6 +238,21 @@ jobs:
           platforms: ${{ inputs.build-platforms }}
           build-args: ${{ inputs.build-args }}
           labels: ${{ steps.metadata.outputs.labels }}
+
+      - name: Extract first image tag
+        if: inputs.sign-with-github
+        id: attest-image-tag
+        run: |
+          export ATTEST_TAG="$(echo "${{inputs.build-name}}" | awk -F'[,\n]' '{print $1}')"
+          echo "ATTEST_TAG=$ATTEST_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Attest
+        if: inputs.sign-with-github && steps.attest-image-tag.outputs.ATTEST_TAG != ''
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ steps.attest-image-tag.outputs.ATTEST_TAG }}
+          subject-digest: ${{ steps.build-and-push.outputs.digest }}
+          push-to-registry: true
 
       - name: Azure Logout
         if: (success() || failure()) && steps.env-setup.outputs.AZ_LOGIN_SET == 'yes'

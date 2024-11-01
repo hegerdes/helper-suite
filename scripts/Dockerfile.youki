@@ -21,7 +21,7 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ARG YoukiVersion=main
 ENV PATH="/root/.cargo/bin:${PATH}"
 WORKDIR /builder
-RUN git clone --branch ${YoukiVersion} --recurse-submodules https://github.com/containers/youki.git
+RUN git clone --branch ${YoukiVersion} --recurse-submodules https://github.com/youki-dev/youki/.git
 RUN cd youki \
     # && just youki-release \
     && ./scripts/build.sh -o . -r -f wasm-wasmedge

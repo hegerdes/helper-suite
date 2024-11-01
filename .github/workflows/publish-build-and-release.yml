@@ -101,12 +101,12 @@ jobs:
 
       - name: Get latest publish versions
         id: releases
-        run: echo "YOUKI_TAG=$(curl -s https://api.github.com/repos/containers/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
+        run: echo "YOUKI_TAG=$(curl -s https://api.github.com/repos/youki-dev/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout youki
         uses: actions/checkout@v4
         with:
-          repository: containers/youki
+          repository: youki-dev/youki
           path: youki
           ref: ${{ steps.releases.outputs.YOUKI_TAG }}
 
@@ -178,7 +178,7 @@ jobs:
         run: |
           mkdir -p artifacts
           echo "CRUN_TAG=$(curl -s https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
-          echo "YOUKI_TAG=$(curl -s https://api.github.com/repos/containers/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
+          echo "YOUKI_TAG=$(curl -s https://api.github.com/repos/youki-dev/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
         uses: actions/checkout@v4
@@ -190,7 +190,7 @@ jobs:
       - name: Checkout youki
         uses: actions/checkout@v4
         with:
-          repository: containers/youki
+          repository: youki-dev/youki
           path: youki
           ref: ${{ steps.releases.outputs.YOUKI_TAG }}
 
@@ -242,7 +242,7 @@ jobs:
             These are unofficial periodic release of different tools with extra configuration than the official ons.
             Included are:
               * [crun](https://github.com/containers/crun)
-              * [youki](https://github.com/containers/youki)
+              * [youki](https://github.com/youki-dev/youki)
               * [kube-etcd](https://kubernetes.io/)
 
             ## Crun - wasm
@@ -255,7 +255,7 @@ jobs:
 
             ## Youki - wasm
             It is build with wasm support and only for the amd64/arm64 arch.
-            This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/containers/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
+            This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/youki-dev/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
 
             For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
             `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.

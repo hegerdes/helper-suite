@@ -147,6 +147,9 @@ jobs:
 
   Build-Pigz:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -179,12 +182,6 @@ jobs:
             base-devel
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-zlib
-
-      # - name: Install build dependencies
-      #   if: ${{ matrix.os == 'windows-latest' }}
-      #   run: |
-      #     pacman -Syu --noconfirm
-      #     pacman -S --needed --noconfirm base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-zlib
 
       - name: Get latest publish versions
         id: releases
@@ -332,18 +329,21 @@ jobs:
           ls -la
 
       - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/attest-build-provenance@v1
         continue-on-error: true
         with:
           subject-path: artifacts/crun*
 
       - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/attest-build-provenance@v1
         continue-on-error: true
         with:
           subject-path: artifacts/youki*
 
       - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/attest-build-provenance@v1
         continue-on-error: true
         with:

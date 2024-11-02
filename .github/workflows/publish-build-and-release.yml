@@ -182,6 +182,7 @@ jobs:
             tar
             base-devel
             mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-zlib
 
       - name: Get latest publish versions
         id: releases
@@ -201,7 +202,7 @@ jobs:
           echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
           if [[ "${{ matrix.os }}" == *"windows"* ]]; then
-            echo "RELEASE_ARTIFACT=$(echo windows)" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_ARTIFACT=$(echo windows_x86_64)" >> "$GITHUB_OUTPUT"
             echo "RELEASE_ARTIFACT=$(echo windows)"
           else
             echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')" >> "$GITHUB_OUTPUT"
@@ -236,7 +237,7 @@ jobs:
           make
           ./pigz.exe --version
           ./pigz.exe --help
-          tar czvf "pigz-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz.exe unpigz.exe pigz.pdf README
+          tar czvf "pigz-windows-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz.exe unpigz.exe pigz.pdf README
           cp -rv *.tar.gz $GITHUB_WORKSPACE/artifacts/
 
       - name: Upload artifact
@@ -327,7 +328,7 @@ jobs:
           for i in wasm-youki*; do echo "Youki: ${i}"; mv -- "$i" "youki-${{ steps.metadata.outputs.YOUKI_REPO_HASH }}-${i:17}"; done
           # Archive youki
           for i in youki*; do tar -cvzf $i.tar.gz $i; rm -rf $i; done
-          for i in pigz*; do echo "Found ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
+          for i in pigz*; do echo "Pigz: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           ls -la
 
       - name: Generate artifact attestation
@@ -364,10 +365,12 @@ jobs:
             Included are:
               * [crun](https://github.com/containers/crun)
               * [youki](https://github.com/youki-dev/youki)
+              * [pigz](https://github.com/madler/pigz)
               * [kube-etcd](https://kubernetes.io/)
 
             ## Crun - wasm
-            It is build with wasm support and only for the amd64/arm64 arch.
+            OCI compliant runtime for linux written in C.
+            Unlike the upstream version it is build with wasm support for the amd64/arm64 arch.
             This release was build at [crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}](https://github.com/containers/crun/tree/${{ steps.metadata.outputs.CRUN_REPO_HASH }})
 
             The libs in the archive need to be added to your system LIBs PATH.
@@ -375,11 +378,16 @@ jobs:
             Also the package libyajl2 is requiered.
 
             ## Youki - wasm
-            It is build with wasm support and only for the amd64/arm64 arch.
+            OCI compliant runtime for linux written in rust.
+            Unlike the upstream version it is build with wasm support for the amd64/arm64 arch.
             This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/youki-dev/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
 
             For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
             `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
+
+            ## Pigz
+            A parallel implementation of gzip for modern multi-processor, multi-core machines.
+            You can most likly use the version form your package manager when you are on linux. But for windows there is no official release, so you can use this one.
 
             ## Kube-Etcd
             A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.

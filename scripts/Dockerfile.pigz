@@ -2,7 +2,7 @@ FROM debian:bookworm
 
 # Install dev deps
 RUN apt-get update && apt-get install -y \
-    make curl git gcc build-essential libz-dev curl wget
+    make curl git gcc build-essential libz-dev
 
 # Build Args
 ARG Pigzversion=master
@@ -13,6 +13,6 @@ RUN git clone --branch ${Pigzversion} https://github.com/madler/pigz.git
 RUN cd pigz \
     && make -j $(nproc) \
     && ./pigz --version \
-    && tar czvf "pigz-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz unpigz pigz.pdf README
+    && tar czvf "pigz-linux-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz unpigz pigz.pdf README
 
 RUN cp pigz/pigz*.tar.gz .

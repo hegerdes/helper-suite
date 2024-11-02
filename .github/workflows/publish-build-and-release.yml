@@ -179,9 +179,9 @@ jobs:
             curl
             git
             make
+            tar
             base-devel
             mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-zlib
 
       - name: Get latest publish versions
         id: releases
@@ -222,6 +222,12 @@ jobs:
           platforms: ${{ matrix.arch }}
           build-args: PigzVersion=${{ steps.releases.outputs.PIGZ_TAG }}
 
+      - name: Inspect and extract artifacts
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          docker image inspect linux/pigz:latest
+          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export linux/pigz:latest bash -c 'cp -rv /builder/*.tar.gz /export/'
+
       - name: Build pigz - windows
         if: ${{ matrix.os == 'windows-latest' }}
         working-directory: pigz
@@ -230,12 +236,8 @@ jobs:
           make
           ./pigz.exe --version
           ./pigz.exe --help
-
-      - name: Inspect and extract artifacts
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          docker image inspect linux/pigz:latest
-          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export linux/pigz:latest bash -c 'cp -rv /builder/*.tar.gz /export/'
+          tar czvf "pigz-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz.exe unpigz.exe pigz.pdf README
+          cp -rv *.tar.gz $GITHUB_WORKSPACE/artifacts/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

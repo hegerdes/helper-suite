@@ -28,7 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         arch: [linux/amd64, linux/arm64]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,16 +82,13 @@ jobs:
           path: artifacts/*
           retention-days: 60
 
-  Build-Pigz:
-    runs-on: ${{ matrix.os }}
+  Build-Youki:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
         arch: [linux/amd64, linux/arm64]
-        exclude:
-          - os: windows-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -120,6 +116,85 @@ jobs:
         run: |
           echo "YOUKI_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')" >> "$GITHUB_OUTPUT"
+
+      - name: Create artifact dir
+        run: mkdir -p artifacts
+
+      - name: Build youki
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: scripts
+          file: scripts/Dockerfile.youki
+          tags: ${{ matrix.arch }}/wasmyouki:latest
+          platforms: ${{ matrix.arch }}
+          shm-size: 12g
+          build-args: YoukiVersion=${{ steps.releases.outputs.YOUKI_TAG }}
+
+      - name: Inspect and extract artifacts
+        run: |
+          docker image inspect ${{ matrix.arch }}/wasmyouki:latest
+          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmyouki bash -c 'cp -rav /builder/youki/youki /export/youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}'
+          sudo chmod +x $GITHUB_WORKSPACE/artifacts/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
+          path: artifacts/*
+          retention-days: 60
+
+  Build-Pigz:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        arch: [linux/amd64, linux/arm64]
+        exclude:
+          - os: windows-latest
+            arch: linux/arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up MSYS2
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+
+      - name: Install build dependencies
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --needed --noconfirm base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-zlib
+
+      - name: Get latest publish versions
+        id: releases
+        run: echo "PIGZ_TAG=$(curl -s https://api.github.com/repos/madler/pigz/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pigz
+        uses: actions/checkout@v4
+        with:
+          repository: madler/pigz
+          path: pigz
+          ref: ${{ steps.releases.outputs.PIGZ_TAG }}
+
+      - name: Get publish hash-data
+        working-directory: pigz
+        id: metadata
+        run: |
+          echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
           if [[ "${{ matrix.os }}" == *"windows"* ]]; then
             echo "RELEASE_ARTIFACT=$(echo windows)" >> "$GITHUB_OUTPUT"
             echo "RELEASE_ARTIFACT=$(echo windows)"
@@ -131,7 +206,7 @@ jobs:
       - name: Create artifact dir
         run: mkdir -p artifacts
 
-      - name: Pigz build
+      - name: Pigz build - linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: docker/build-push-action@v5
         with:
@@ -141,6 +216,14 @@ jobs:
           tags: linux/pigz:latest
           platforms: ${{ matrix.arch }}
           build-args: PigzVersion=${{ steps.releases.outputs.PIGZ_TAG }}
+
+      - name: Build pigz - windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        working-directory: pigz
+        run: |
+          make
+          ./pigz.exe --version
+          ./pigz.exe --help
 
       - name: Inspect and extract artifacts
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -189,6 +272,7 @@ jobs:
           mkdir -p artifacts
           echo "CRUN_TAG=$(curl -sL https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
           echo "YOUKI_TAG=$(curl -sL https://api.github.com/repos/youki-dev/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
+          echo "PIGZ_TAG=$(curl -s https://api.github.com/repos/madler/pigz/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
         uses: actions/checkout@v4
@@ -204,11 +288,19 @@ jobs:
           path: youki
           ref: ${{ steps.releases.outputs.YOUKI_TAG }}
 
+      - name: Checkout pigz
+        uses: actions/checkout@v4
+        with:
+          repository: madler/pigz
+          path: pigz
+          ref: ${{ steps.releases.outputs.PIGZ_TAG }}
+
       - name: Get publish hash-data
         id: metadata
         run: |
           cd $GITHUB_WORKSPACE/crun && echo "CRUN_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE/youki && echo "YOUKI_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          cd $GITHUB_WORKSPACE/pigz && echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE && echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
 
       - name: Download artifatcs
@@ -220,23 +312,20 @@ jobs:
         working-directory: artifacts
         run: |
           ls -la
-          for i in wasm-crun*; do echo "Found ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
+          # Moving crun
+          for i in wasm-crun*; do echo "Crun: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
+          # Rename youki
+          for i in wasm-youki*; do echo "Youki: ${i}"; mv -- "$i" "youki-${{ steps.metadata.outputs.YOUKI_REPO_HASH }}-${i:17}"; done
+          # Archive youki
+          for i in youki*; do tar -cvzf $i.tar.gz $i; rm -rf $i; done
           for i in pigz*; do echo "Found ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           ls -la
 
-      # - name: Release
-      #   id: release
-      #   if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     name: "Artifacts: Crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}"
-      #     tag_name: v${{ steps.metadata.outputs.RELEASE_VERSION }}
-      #     fail_on_unmatched_files: true
-      #     body: |
-      #       These are unofficial periodic release of different tools with extra configuration than the official ons.
-      #       Included are:
-      #         * [crun](https://github.com/containers/crun)
-      #         * [pigz](https://github.com/madler/pigz)
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        continue-on-error: true
+        with:
+          subject-path: artifacts/crun*
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
@@ -244,13 +333,47 @@ jobs:
         with:
           subject-path: artifacts/youki*
 
-      #       The libs in the archive need to be added to your system LIBs PATH.
-      #       See these [instructions](https://blog.andrewbeacock.com/2007/10/how-to-add-shared-libraries-to-linuxs.html) for how-to do so.
-      #       Also the package libyajl2 is requiered.
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        continue-on-error: true
+        with:
+          subject-path: artifacts/pigz*
 
-      #       ## Pigz
-      #       Static linked binary for x86 (Linux & Windows) and arm (Linux only) that does gzip compression with multithredding.
-      #       This release was build at [crun@${{ steps.metadata.outputs.PIGZ_REPO_HASH }}](https://github.com/madler/pigz/tree/${{ steps.metadata.outputs.PIGZ_REPO_HASH }})
+      - name: Release
+        id: release
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Artifacts: Crun;Youki;Kube-Etcd"
+          tag_name: v${{ steps.metadata.outputs.RELEASE_VERSION }}
+          fail_on_unmatched_files: true
+          body: |
+            These are unofficial periodic release of different tools with extra configuration than the official ones.
+            Included are:
+              * [crun](https://github.com/containers/crun)
+              * [youki](https://github.com/youki-dev/youki)
+              * [kube-etcd](https://kubernetes.io/)
 
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     files: artifacts/*
+            ## Crun - wasm
+            It is build with wasm support and only for the amd64/arm64 arch.
+            This release was build at [crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}](https://github.com/containers/crun/tree/${{ steps.metadata.outputs.CRUN_REPO_HASH }})
+
+            The libs in the archive need to be added to your system LIBs PATH.
+            See these [instructions](https://blog.andrewbeacock.com/2007/10/how-to-add-shared-libraries-to-linuxs.html) for how-to do so.
+            Also the package libyajl2 is requiered.
+
+            ## Youki - wasm
+            It is build with wasm support and only for the amd64/arm64 arch.
+            This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/youki-dev/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
+
+            For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
+            `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
+
+            ## Kube-Etcd
+            A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.
+            This image is inteded to be used for testing in local and CI setups to have a fully working kubernetes api as an endpint. Certs are generated automaticly on startup, if they are not externaly mounted.
+
+            Note that the container behaves like a nomal kubernetes api but can not spawn pods.
+            Images can be found on [DockerHub](https://hub.docker.com/r/hegerdes/kubernetes-etcd)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: artifacts/*

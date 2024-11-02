@@ -172,7 +172,6 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          update: true
           install: >-
             curl
             git
@@ -229,6 +228,7 @@ jobs:
       - name: Build pigz - windows
         if: ${{ matrix.os == 'windows-latest' }}
         working-directory: pigz
+        shell: msys2 {0}
         run: |
           make
           ./pigz.exe --version
@@ -248,6 +248,7 @@ jobs:
           retention-days: 60
 
   Build-Kube-Etcd:
+    if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
     strategy:
       fail-fast: false
       matrix:

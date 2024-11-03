@@ -19,6 +19,7 @@ permissions:
 env:
   # Download artefacts fails if summery upload is on
   DOCKER_BUILD_RECORD_UPLOAD: false
+  DOCKER_BUILD_SUMMARY: false
 
 jobs:
   Build-Crun:
@@ -145,7 +146,110 @@ jobs:
           path: artifacts/*
           retention-days: 60
 
+  Build-Pigz:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        arch: [linux/amd64, linux/arm64]
+        exclude:
+          - os: windows-latest
+            arch: linux/arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up MSYS2
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            curl
+            git
+            make
+            tar
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-zlib
+
+      - name: Get latest publish versions
+        id: releases
+        run: echo "PIGZ_TAG=$(curl -s https://api.github.com/repos/madler/pigz/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pigz
+        uses: actions/checkout@v4
+        with:
+          repository: madler/pigz
+          path: pigz
+          ref: ${{ steps.releases.outputs.PIGZ_TAG }}
+
+      - name: Get publish hash-data
+        working-directory: pigz
+        id: metadata
+        run: |
+          echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
+          if [[ "${{ matrix.os }}" == *"windows"* ]]; then
+            echo "RELEASE_ARTIFACT=$(echo windows-x86_64)" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_ARTIFACT=$(echo windows)"
+          else
+            echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')"
+          fi
+
+      - name: Create artifact dir
+        run: mkdir -p artifacts
+
+      - name: Pigz build - linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: scripts
+          file: scripts/Dockerfile.pigz
+          tags: linux/pigz:latest
+          platforms: ${{ matrix.arch }}
+          build-args: PigzVersion=${{ steps.releases.outputs.PIGZ_TAG }}
+
+      - name: Inspect and extract artifacts
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          docker image inspect linux/pigz:latest
+          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export linux/pigz:latest bash -c 'cp -rv /builder/*.tar.gz /export/'
+
+      - name: Build pigz - windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        working-directory: pigz
+        shell: msys2 {0}
+        run: |
+          make
+          ./pigz.exe --version
+          ./pigz.exe --help
+          tar czvf "pigz-windows-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz.exe unpigz.exe pigz.pdf README
+          cp -rv *.tar.gz $GITHUB_WORKSPACE/artifacts/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pigz-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
+          path: artifacts/*
+          retention-days: 60
+
   Build-Kube-Etcd:
+    if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
     strategy:
       fail-fast: false
       matrix:
@@ -179,6 +283,7 @@ jobs:
           mkdir -p artifacts
           echo "CRUN_TAG=$(curl -sL https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
           echo "YOUKI_TAG=$(curl -sL https://api.github.com/repos/youki-dev/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
+          echo "PIGZ_TAG=$(curl -s https://api.github.com/repos/madler/pigz/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
         uses: actions/checkout@v4
@@ -194,11 +299,19 @@ jobs:
           path: youki
           ref: ${{ steps.releases.outputs.YOUKI_TAG }}
 
+      - name: Checkout pigz
+        uses: actions/checkout@v4
+        with:
+          repository: madler/pigz
+          path: pigz
+          ref: ${{ steps.releases.outputs.PIGZ_TAG }}
+
       - name: Get publish hash-data
         id: metadata
         run: |
           cd $GITHUB_WORKSPACE/crun && echo "CRUN_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE/youki && echo "YOUKI_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          cd $GITHUB_WORKSPACE/pigz && echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE && echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
 
       - name: Download artifatcs
@@ -216,19 +329,29 @@ jobs:
           for i in wasm-youki*; do echo "Youki: ${i}"; mv -- "$i" "youki-${{ steps.metadata.outputs.YOUKI_REPO_HASH }}-${i:17}"; done
           # Archive youki
           for i in youki*; do tar -cvzf $i.tar.gz $i; rm -rf $i; done
+          for i in pigz*; do echo "Pigz: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           ls -la
 
       - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/attest-build-provenance@v1
         continue-on-error: true
         with:
           subject-path: artifacts/crun*
 
       - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/attest-build-provenance@v1
         continue-on-error: true
         with:
           subject-path: artifacts/youki*
+
+      - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/attest-build-provenance@v1
+        continue-on-error: true
+        with:
+          subject-path: artifacts/pigz*
 
       - name: Release
         id: release
@@ -243,10 +366,12 @@ jobs:
             Included are:
               * [crun](https://github.com/containers/crun)
               * [youki](https://github.com/youki-dev/youki)
+              * [pigz](https://github.com/madler/pigz)
               * [kube-etcd](https://kubernetes.io/)
 
             ## Crun - wasm
-            It is build with wasm support and only for the amd64/arm64 arch.
+            OCI compliant runtime for linux written in C.
+            Unlike the upstream version it is build with wasm support for the amd64/arm64 arch.
             This release was build at [crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}](https://github.com/containers/crun/tree/${{ steps.metadata.outputs.CRUN_REPO_HASH }})
 
             The libs in the archive need to be added to your system LIBs PATH.
@@ -254,11 +379,16 @@ jobs:
             Also the package libyajl2 is requiered.
 
             ## Youki - wasm
-            It is build with wasm support and only for the amd64/arm64 arch.
+            OCI compliant runtime for linux written in rust.
+            Unlike the upstream version it is build with wasm support for the amd64/arm64 arch.
             This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/youki-dev/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
 
             For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
             `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
+
+            ## Pigz
+            A parallel implementation of gzip for modern multi-processor, multi-core machines.
+            You can most likly use the version form your package manager when you are on linux. But for windows there is no official release, so you can use this one.
 
             ## Kube-Etcd
             A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.

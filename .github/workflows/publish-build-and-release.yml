@@ -19,6 +19,7 @@ permissions:
 env:
   # Download artefacts fails if summery upload is on
   DOCKER_BUILD_RECORD_UPLOAD: false
+  DOCKER_BUILD_SUMMARY: false
 
 jobs:
   Build-Crun:
@@ -202,7 +203,7 @@ jobs:
           echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
           if [[ "${{ matrix.os }}" == *"windows"* ]]; then
-            echo "RELEASE_ARTIFACT=$(echo windows_x86_64)" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_ARTIFACT=$(echo windows-x86_64)" >> "$GITHUB_OUTPUT"
             echo "RELEASE_ARTIFACT=$(echo windows)"
           else
             echo "RELEASE_ARTIFACT=$(echo ${{ matrix.arch }} | tr '/' '-')" >> "$GITHUB_OUTPUT"

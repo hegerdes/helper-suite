@@ -215,7 +215,7 @@ jobs:
 
       - name: Pigz build - linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           load: true
           context: scripts

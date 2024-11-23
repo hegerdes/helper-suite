@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ou pipefail
+set -eou pipefail
 echo "Will start kube-apiserver & etcd:"
 kube-apiserver --version
 etcd --version
@@ -16,7 +16,10 @@ KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
 mkdir -p $CERTS_DIR
 mkdir -p $ETCD_DATA
 
-# CA
+# IPs
+echo "IPs: $(hostname -i)"
+
+# User credentials
 if [ ! -f "$CERTS_DIR/token.csv" ]; then
     echo "Createn token.csv file"
     echo "Users:"
@@ -85,7 +88,7 @@ trap 'echo "Script is terminating..."; kill $KUBE_APISERVER_PID; kill $ETCD_PID;
     --name \
     demo-etcd \
     --advertise-client-urls \
-    http://etcd:2379 \
+    http://$(hostname):2379 \
     --listen-client-urls \
     http://0.0.0.0:2379 &
 ETCD_PID=$!

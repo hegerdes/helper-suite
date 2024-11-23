@@ -1,6 +1,6 @@
 FROM alpine:3.20 AS build
-ARG KUBE_VERSION=1.31.1
-ARG ETCD_VERSION=3.5.16
+ARG KUBE_VERSION=1.31.3
+ARG ETCD_VERSION=3.5.17
 
 # Install dev deps
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
@@ -8,14 +8,15 @@ RUN apk add --no-cache ca-certificates curl tar openssl bash
 
 RUN echo "Downloading Binaries" \
     && if [ "$(uname -m)" = "x86_64" ]; then export ARCH=amd64; else export ARCH=arm64; fi \
-    && curl -sL -o /tmp/kube-apiserver.tar.gz https://dl.k8s.io/v${KUBE_VERSION}/kubernetes-server-linux-${ARCH}.tar.gz \
-    && curl -sL -o /tmp/etcd.tar.gz https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-${ARCH}.tar.gz \
-    && curl -sL --output /usr/bin/kubectl "https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/${ARCH}/kubectl" \
+    && curl -sL --fail --output /tmp/kube-apiserver.tar.gz https://dl.k8s.io/v${KUBE_VERSION}/kubernetes-server-linux-${ARCH}.tar.gz \
+    && curl -sL --fail --output /tmp/etcd.tar.gz https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-${ARCH}.tar.gz \
+    && curl -sL --fail --output /usr/bin/kubectl "https://dl.k8s.io/release/v${KUBE_VERSION}/bin/linux/${ARCH}/kubectl" \
     && tar -xzvf /tmp/kube-apiserver.tar.gz -C /usr/local/bin --strip-components=3 kubernetes/server/bin/kube-apiserver \
     && tar -xzvf /tmp/etcd.tar.gz -C /usr/local/bin --strip-components=1 etcd-v${ETCD_VERSION}-linux-${ARCH}/etcd \
     && chmod +x /usr/bin/kubectl \
     && kube-apiserver --version \
     && etcd --version \
+    && kubectl version --client \
     && rm -rf /tmp
 
 COPY kube-start.sh csr.conf /

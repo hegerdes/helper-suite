@@ -4,6 +4,7 @@ set -eou pipefail
 echo "Will start kube-apiserver & etcd:"
 kube-apiserver --version
 etcd --version
+kubectl version --client
 
 DEFAULT_USER_TOKENS="31ada4fd-adec-460c-809a-9e56ceb75269,admin,admin,system:masters"
 CERTS_DIR=${CERTS_DIR:-/tmp/certs}
@@ -103,7 +104,7 @@ kube-apiserver \
     --tls-private-key-file=$CERTS_DIR/kube-apiserver.key \
     --tls-cert-file=$CERTS_DIR/kube-apiserver.crt \
     --client-ca-file=$CERTS_DIR/ca.crt \
-    --bind-address=:: \
+    --bind-address=0.0.0.0 \
     --enable-bootstrap-token-auth \
     --external-hostname=$EXTERNAL_HOST \
     --secure-port=6443 \

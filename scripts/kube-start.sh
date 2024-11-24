@@ -14,8 +14,7 @@ USER_TOKENS=${USER_TOKENS:-$DEFAULT_USER_TOKENS}
 K8S_CURRENT_SERVER=${K8S_CURRENT_SERVER:-"https://localhost:6443"}
 EXTERNAL_HOST=${EXTERNAL_HOST:-$(hostname)}
 KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
-mkdir -p $CERTS_DIR
-mkdir -p $ETCD_DATA
+mkdir -p $CERTS_DIR $ETCD_DATA
 
 # IPs
 echo "IPs: $(hostname -i)"
@@ -80,7 +79,16 @@ kubectl config set-context default \
     --cluster=$CLUSTER_NAME \
     --user=admin
 
+# Make kubeconf usable
 kubectl config use-context default --kubeconfig $CERTS_DIR/kubeconf.yaml
+if [ ! -z ${CI_BUILDS_DIR+x} ]; then
+    echo "Copying kubeconf.yaml to $CI_BUILDS_DIR"
+    mkdir -p $CI_BUILDS_DIR
+    cp -av $CERTS_DIR/kubeconf.yaml $CI_BUILDS_DIR/kubeconf.yaml
+fi
+
+# Trap signals and kill subprocesses
+echo "Starting etcd & kube-apiserver..."
 trap 'echo "Script is terminating..."; kill $KUBE_APISERVER_PID; kill $ETCD_PID; exit' SIGINT SIGTERM
 
 /usr/local/bin/etcd \

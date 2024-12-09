@@ -248,7 +248,7 @@ jobs:
 
       - name: Create attestation for image
         if: inputs.sign-with-github && steps.attest-image-tag.outputs.ATTEST_TAG != ''
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ steps.attest-image-tag.outputs.ATTEST_TAG }}
           subject-digest: ${{ steps.build-and-push.outputs.digest }}

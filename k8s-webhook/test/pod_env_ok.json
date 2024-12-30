@@ -1,0 +1,62 @@
+{
+  "apiVersion": "admission.k8s.io/v1",
+  "kind": "AdmissionReview",
+  "request": {
+    "uid": "12345678-1234-5678-1234-567812345678",
+    "kind": {
+      "group": "",
+      "version": "v1",
+      "kind": "Pod"
+    },
+    "resource": {
+      "group": "",
+      "version": "v1",
+      "resource": "pods"
+    },
+    "namespace": "default",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "admin",
+      "uid": "admin-uid",
+      "groups": [
+        "system:masters",
+        "system:authenticated"
+      ]
+    },
+    "object": {
+      "metadata": {
+        "name": "example-pod",
+        "namespace": "default"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "nginx",
+            "image": "ghcr.io/nginx",
+            "ports": [
+              {
+                "containerPort": 80
+              }
+            ],
+            "env": [
+              {
+                "name": "ENV_VAR1",
+                "value": "value1"
+              },
+              {
+                "name": "ENV_VAR2",
+                "value": "value2"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "oldObject": null,
+    "dryRun": false,
+    "options": {
+      "apiVersion": "meta.k8s.io/v1",
+      "kind": "CreateOptions"
+    }
+  }
+}

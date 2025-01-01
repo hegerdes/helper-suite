@@ -1,0 +1,39 @@
+{{- if .Values.mutatingWebhooks.enabled -}}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "k8s-admission.fullname" . }}
+  annotations:
+    deployment: "{{ .Release.Namespace }}/{{ include "k8s-admission.fullname" . }}"
+    {{- if .Values.certificates.certmanager.enabled }}
+    # Docs: https://cert-manager.io/v1.5-docs/concepts/ca-injector/
+    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ include "k8s-admission.fullname" . }}"
+    {{- end }}
+webhooks:
+{{- if .Values.mutatingWebhooks.proxyEnvInject.enabled }}
+- name: proxy-env.hegerdes.com
+  admissionReviewVersions: [v1]
+  {{- if not .Values.certificates.certmanager.enabled }}
+  clientConfig:
+    caBundle: {{ index .Values.certificates "ca.crt" }}
+  {{- end }}
+  {{- with .Values.mutatingWebhooks.proxyEnvInject.namespaceSelector }}
+  namespaceSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  clientConfig:
+    service:
+      name: {{ include "k8s-admission.fullname" . }}
+      namespace: {{ .Release.Namespace }}
+      path: /add-proxy-env
+      port: {{ .Values.service.port }}
+  rules:
+  - apiGroups: [""]
+    apiVersions: [v1]
+    operations: [CREATE, UPDATE]
+    resources: [pods]
+    scope: '*'
+  sideEffects: None
+  timeoutSeconds: 30
+{{- end }}
+{{- end }}

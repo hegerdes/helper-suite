@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	// allowedImages         = os.Getenv("NO_PROXY")
+	// allowedImages         = os.Getenv("ALLOWED_IMAGES")
 	allowedImages = "ghcr.io,"
 )
 
@@ -39,10 +39,17 @@ func AllowedImages(ar admissionv1.AdmissionReview) *admissionv1.AdmissionRespons
 	klog.V(2).Info("calling allowed-images")
 	reviewResponse := admissionv1.AdmissionResponse{}
 	reviewResponse.Allowed = true
+	// If not set, allow all images
+	if allowedImages == "" {
+		return &reviewResponse
+	}
+
+	// Get the pod
 	pod, err := getPod(ar)
 	if err != nil {
 		return toV1AdmissionResponseError(err)
 	}
+	// Get the images
 	images := getImages(*pod)
 	fmt.Println(images)
 

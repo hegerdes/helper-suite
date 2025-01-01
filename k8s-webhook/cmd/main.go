@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -39,12 +40,18 @@ in the Kubernetes cluster to register remote webhook admission controllers.`,
 }
 
 func init() {
+	// Port setup
+	defaultPort, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		defaultPort = 8080
+	}
+
 	kubehooks.Init()
 	CmdWebhook.Flags().StringVar(&certFile, "tls-cert-file", "",
 		"File containing the default x509 Certificate for HTTPS. (CA cert, if any, concatenated after server cert).")
 	CmdWebhook.Flags().StringVar(&keyFile, "tls-private-key-file", "",
 		"File containing the default x509 private key matching --tls-cert-file.")
-	CmdWebhook.Flags().IntVar(&port, "port", 8080,
+	CmdWebhook.Flags().IntVar(&port, "port", defaultPort,
 		"Secure port that the webhook listens on")
 }
 
@@ -138,16 +145,20 @@ func run(cmd *cobra.Command, args []string) {
 		KeyFile:  keyFile,
 	}
 
+	// Validating endpoints
 	http.HandleFunc("/always-allow-delay-5s", serveAlwaysAllowDelayFiveSeconds)
 	http.HandleFunc("/always-deny", serveAlwaysDeny)
-	http.HandleFunc("/add-proxy-env", serveSetProxyEnv)
 	http.HandleFunc("/allowed-images", serveAllowedImages)
+	// Mutating endpoints
+	http.HandleFunc("/add-proxy-env", serveSetProxyEnv)
+	// Misc endpoints
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 	//
 	server := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
 		TLSConfig: configTLS(config),
 	}
+	klog.Infof("Listening on %d", port)
 	err := server.ListenAndServeTLS("", "")
 	if err != nil {
 		panic(err)

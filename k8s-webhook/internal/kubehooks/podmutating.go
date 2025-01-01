@@ -12,18 +12,24 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	HTTP_PROXY_ENV  = "HTTP_PROXY"
+	HTTPS_PROXY_ENV = "HTTPS_PROXY"
+	NO_PROXY_ENV    = "NO_PROXY"
+)
+
 var (
 
-	// httpsProxy      = os.Getenv("HTTPS_PROXY")
-	// httpProxy       = os.Getenv("HTTP_PROXY")
-	// noProxy         = os.Getenv("NO_PROXY")
-	httpsProxy = "http://proxy.example"
-	httpProxy  = "http://proxy.example"
-	noProxy    = "localhost,"
-
-	httpProxyPatch  = JSONPatch{Op: "add", Path: "/spec/containers/0/env/0", Value: JSONPatchValue{Name: "http_proxy", Value: httpProxy}}
-	httpsProxyPatch = JSONPatch{Op: "add", Path: "/spec/containers/0/env/1", Value: JSONPatchValue{Name: "https_proxy", Value: httpsProxy}}
-	noProxyPatch    = JSONPatch{Op: "add", Path: "/spec/containers/0/env/2", Value: JSONPatchValue{Name: "no_proxy", Value: noProxy}}
+	// httpsProxy      = os.Getenv(HTTPS_PROXY_ENV)
+	// httpProxy       = os.Getenv(HTTP_PROXY_ENV)
+	// noProxy         = os.Getenv(NO_PROXY_ENV)
+	httpsProxy       = "http://proxy.example"
+	httpProxy        = "http://proxy.example"
+	noProxy          = "localhost,"
+	httpProxyKVPair  = JSONPatchKV{Name: HTTP_PROXY_ENV, Value: httpProxy}
+	httpsProxyKVPair = JSONPatchKV{Name: HTTPS_PROXY_ENV, Value: httpsProxy}
+	noProxyKVPair    = JSONPatchKV{Name: NO_PROXY_ENV, Value: noProxy}
+	proxyKeyValuPais = []JSONPatchKV{httpProxyKVPair, httpsProxyKVPair, noProxyKVPair}
 )
 
 // alwaysDeny all requests made to this function.
@@ -34,8 +40,8 @@ func SetProxyEnv(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse 
 	if err != nil {
 		return toV1AdmissionResponseError(err)
 	}
-	mainContainerPatches := generateEnvPatches(pod.Spec.Containers)
-	initContainerPatches := generateEnvPatches(pod.Spec.InitContainers)
+	mainContainerPatches := generateEnvPatches(pod.Spec.Containers, "containers")
+	initContainerPatches := generateEnvPatches(pod.Spec.InitContainers, "initContainers")
 	patches := append(mainContainerPatches, initContainerPatches...)
 	bytePatches, _ := json.Marshal(patches)
 	fmt.Println(string(bytePatches))
@@ -44,41 +50,47 @@ func SetProxyEnv(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse 
 }
 
 // Generate patches for setting proxy environment variables
-func generateEnvPatches(containers []corev1.Container) []JSONPatch {
+func generateEnvPatches(containers []corev1.Container, containerType string) []JSONPatch {
 	var patches = []JSONPatch{}
 	for index, container := range containers {
-		var (
-			envIndex      = 0
-			httpProxySet  = false
-			httpsProxySet = false
-			noProxySet    = false
-		)
-		fmt.Println(container.Env)
-		for _, env := range container.Env {
-			if strings.ToLower(env.Name) == "http_proxy" {
-				httpProxySet = true
+		envIndex := 0
+		httpProxySet := false
+		httpsProxySet := false
+		noProxySet := false
+		if len(container.Env) == 0 {
+			path := fmt.Sprintf("/spec/%s/%d/env", containerType, index)
+			envPatch := JSONPatch{Op: "add", Path: path, Value: proxyKeyValuPais}
+			patches = append(patches, envPatch)
+		} else {
+			for _, env := range container.Env {
+				if strings.ToUpper(env.Name) == HTTP_PROXY_ENV {
+					httpProxySet = true
+				}
+				if strings.ToUpper(env.Name) == HTTPS_PROXY_ENV {
+					httpsProxySet = true
+				}
+				if strings.ToUpper(env.Name) == NO_PROXY_ENV {
+					noProxySet = true
+				}
 			}
-			if strings.ToLower(env.Name) == "https_proxy" {
-				httpsProxySet = true
+			if !httpProxySet && httpProxy != "" {
+				path := fmt.Sprintf("/spec/%s/%d/env/-", containerType, index)
+				httpProxyPatch := JSONPatch{Op: "add", Path: path, Value: httpProxyKVPair}
+				patches = append(patches, httpProxyPatch)
+				envIndex++
 			}
-			if strings.ToLower(env.Name) == "no_proxy" {
-				noProxySet = true
+			if !httpsProxySet && httpsProxy != "" {
+				path := fmt.Sprintf("/spec/%s/%d/env/-", containerType, index)
+				httpProxyPatch := JSONPatch{Op: "add", Path: path, Value: httpsProxyKVPair}
+				patches = append(patches, httpProxyPatch)
+				envIndex++
 			}
-		}
-		if !httpProxySet && httpProxy != "" {
-			httpProxyPatch.Path = fmt.Sprintf("/spec/containers/%d/env/%d", index, len(container.Env)+envIndex)
-			patches = append(patches, httpProxyPatch)
-			envIndex++
-		}
-		if !httpsProxySet && httpsProxy != "" {
-			httpsProxyPatch.Path = fmt.Sprintf("/spec/containers/%d/env/%d", index, len(container.Env)+envIndex)
-			patches = append(patches, httpsProxyPatch)
-			envIndex++
-		}
-		if !noProxySet && noProxy != "" {
-			noProxyPatch.Path = fmt.Sprintf("/spec/containers/%d/env/%d", index, len(container.Env)+envIndex)
-			patches = append(patches, noProxyPatch)
-			envIndex++
+			if !noProxySet && noProxy != "" {
+				path := fmt.Sprintf("/spec/%s/%d/env/-", containerType, index)
+				httpProxyPatch := JSONPatch{Op: "add", Path: path, Value: noProxyKVPair}
+				patches = append(patches, httpProxyPatch)
+				envIndex++
+			}
 		}
 	}
 	return patches

@@ -11,12 +11,12 @@ import (
 )
 
 type JSONPatch struct {
-	Op    string         `json:"op"`
-	Path  string         `json:"path"`
-	Value JSONPatchValue `json:"value"`
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value any    `json:"value"`
 }
 
-type JSONPatchValue struct {
+type JSONPatchKV struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }

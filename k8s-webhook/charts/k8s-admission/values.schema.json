@@ -257,6 +257,15 @@
           "properties": {},
           "type": "object"
         },
+        "externalTrafficPolicy": {
+          "type": "string"
+        },
+        "internalTrafficPolicy": {
+          "type": "string"
+        },
+        "ipFamilyPolicy": {
+          "type": "string"
+        },
         "port": {
           "type": "integer"
         },

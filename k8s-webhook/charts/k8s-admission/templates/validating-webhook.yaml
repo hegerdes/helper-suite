@@ -8,6 +8,12 @@ metadata:
     {{- if .Values.certificates.certmanager.enabled }}
     # Docs: https://cert-manager.io/v1.5-docs/concepts/ca-injector/
     cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ include "k8s-admission.fullname" . }}"
+    {{- else }}
+    {{- if eq .Values.certificates.exsistingSecretName ""}}
+    cert-manager.io/inject-ca-from-secret: "{{ .Release.Namespace }}/{{ include "k8s-admission.fullname" . }}-cert"
+    {{- else }}
+    cert-manager.io/inject-ca-from-secret: "{{ .Release.Namespace }}/{{ .Values.certificates.exsistingSecretName }}"
+    {{- end }}
     {{- end }}
 webhooks:
 {{- if .Values.validatingWebhooks.allowdImages.enabled }}

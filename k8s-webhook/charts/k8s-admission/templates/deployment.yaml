@@ -90,7 +90,7 @@ spec:
           {{- if eq .Values.certificates.exsistingSecretName ""}}
             secretName: {{ include "k8s-admission.fullname" . }}-cert
             {{ else }}
-          secretName: {{ .Values.certificates.exsistingSecretName }}
+            secretName: {{ .Values.certificates.exsistingSecretName }}
           {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 10 }}

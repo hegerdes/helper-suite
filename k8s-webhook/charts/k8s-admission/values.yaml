@@ -42,7 +42,7 @@ serviceAccount:
 podAnnotations: {}
 
 # -- App and Container note. Change also in ENVs.
-podContainerPort: 8080
+podContainerPort: 8443
 
 # -- A admission hooks needs https. Either provide own or use certmanager
 certificates:
@@ -147,8 +147,11 @@ affinity: {}
 # -- How the service is exposed.
 service:
   type: ClusterIP
-  port: 80
+  port: 8443
   annotations: {}
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilyPolicy: SingleStack
   prometheus:
     enabled: false
     scheme: http

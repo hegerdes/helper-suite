@@ -48,13 +48,13 @@ A Helm chart for Kubernetes Admission Hooks
 | nameOverride | string | `""` | Override the application name. |
 | nodeSelector | object | `{}` | Node selector for pod. |
 | podAnnotations | object | `{}` | Extra annotations for the pod. |
-| podContainerPort | int | `8080` | App and Container note. Change also in ENVs. |
+| podContainerPort | int | `8443` | App and Container note. Change also in ENVs. |
 | podEnvs | list | `[{"name":"MY_ENV","value":"MY_VAL"}]` | List of ENVs to configure the app. |
 | podSecurityContext | object | `{}` | PodSecurity settings that will be applied to all containers. |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` | Resources for the container. |
 | securityContext | object | `{}` | Security settings for the container. |
-| service | object | `{"annotations":{},"port":80,"prometheus":{"enabled":false,"path":"/metrics","port":80,"scheme":"http"},"type":"ClusterIP"}` | How the service is exposed. |
+| service | object | `{"annotations":{},"externalTrafficPolicy":"Cluster","internalTrafficPolicy":"Cluster","ipFamilyPolicy":"SingleStack","port":8443,"prometheus":{"enabled":false,"path":"/metrics","port":80,"scheme":"http"},"type":"ClusterIP"}` | How the service is exposed. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created. |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template. |

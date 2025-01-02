@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "k8s-admission.fullname" . }}:{{ .Values.service.port }}']
+      args: ['https://{{ include "k8s-admission.fullname" . }}:{{ .Values.service.port }}/healthz', '--no-check-certificate']
   restartPolicy: Never

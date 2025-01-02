@@ -1,3 +1,7 @@
+// Kubernetes Admission Controller Webhook Server
+// Based on https://github.com/kubernetes/kubernetes/blob/release-1.32/test/images/agnhost/webhook/main.go
+// K8s Docs https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#write-an-admission-webhook-server
+
 package main
 
 import (

@@ -36,10 +36,12 @@ jobs:
         working-directory: k8s-admission
         run: |
           tools/openssl-certs-gen-pki.sh
-          test/run.sh &
+          test/build.sh
+          ./admission-webhook $ADMISSION_ARGS &
           test/test.sh
         env:
           ALLOWED_IMAGES: docker.io
           HTTP_PROXY: http://example.com
           HTTPS_PROXY: https://example.com
           NO_PROXY: localhost
+          ADMISSION_ARGS: --tls-cert-file tools/certificates/client1.pem --tls-private-key-file tools/certificates/client1.key

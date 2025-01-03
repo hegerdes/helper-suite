@@ -32,20 +32,10 @@
         "containers": [
           {
             "name": "nginx",
-            "image": "nginx",
+            "image": "ghcr.io/nginx:1.14.2",
             "ports": [
               {
                 "containerPort": 80
-              }
-            ],
-            "env": [
-              {
-                "name": "ENV_VAR1",
-                "value": "value1"
-              },
-              {
-                "name": "ENV_VAR2",
-                "value": "value2"
               }
             ]
           }

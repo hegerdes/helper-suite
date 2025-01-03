@@ -7,3 +7,5 @@ http-get-push/terraform/backend.tf
 k8s-admission/tools/certs/*
 k8s-admission/dist/*
 k8s-admission/k8s
+k8s-admission/tools/certificates
+k8s-admission/admission-webhook

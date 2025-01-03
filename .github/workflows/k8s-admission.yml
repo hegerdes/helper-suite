@@ -1,0 +1,45 @@
+name: Test k8s-admission controller
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "k8s-admission/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "k8s-admission/**"
+
+permissions:
+  contents: read
+
+jobs:
+  k8s-admission-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '^1.23'
+
+      - name: Run GoReleaser Test Build
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          workdir: k8s-admission
+          args: release --clean --snapshot
+
+      - name: Test
+        working-directory: k8s-admission
+        run: |
+          tools/openssl-certs-gen-pki.sh
+          test/run.sh &
+          test/test.sh
+        env:
+          ALLOWED_IMAGES: docker.io
+          HTTP_PROXY: http://example.com
+          HTTPS_PROXY: https://example.com
+          NO_PROXY: localhost

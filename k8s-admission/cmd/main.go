@@ -144,6 +144,10 @@ func configTLS(config util.Config) *tls.Config {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	if certFile == "" || keyFile == "" {
+		klog.Fatal("TLS certificate and key files are required")
+		os.Exit(1)
+	}
 	config := util.Config{
 		CertFile: certFile,
 		KeyFile:  keyFile,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	admissionv1 "k8s.io/api/admission/v1"
@@ -19,13 +20,12 @@ const (
 )
 
 var (
-
-	// httpsProxy      = os.Getenv(HTTPS_PROXY_ENV)
-	// httpProxy       = os.Getenv(HTTP_PROXY_ENV)
-	// noProxy         = os.Getenv(NO_PROXY_ENV)
-	httpsProxy       = "http://proxy.example"
-	httpProxy        = "http://proxy.example"
-	noProxy          = "localhost,"
+	// httpsProxy       = "http://proxy.example"
+	// httpProxy        = "http://proxy.example"
+	// noProxy          = "localhost,"
+	httpsProxy       = os.Getenv(HTTPS_PROXY_ENV)
+	httpProxy        = os.Getenv(HTTP_PROXY_ENV)
+	noProxy          = os.Getenv(NO_PROXY_ENV)
 	httpProxyKVPair  = JSONPatchKV{Name: HTTP_PROXY_ENV, Value: httpProxy}
 	httpsProxyKVPair = JSONPatchKV{Name: HTTPS_PROXY_ENV, Value: httpsProxy}
 	noProxyKVPair    = JSONPatchKV{Name: NO_PROXY_ENV, Value: noProxy}

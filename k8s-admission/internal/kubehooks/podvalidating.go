@@ -2,6 +2,7 @@ package kubehooks
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -11,8 +12,8 @@ import (
 )
 
 var (
-	// allowedImages         = os.Getenv("ALLOWED_IMAGES")
-	allowedImages = "ghcr.io,"
+	allowedImages = os.Getenv("ALLOWED_IMAGES")
+	// allowedImages = "ghcr.io,"
 )
 
 func AlwaysAllowDelayFiveSeconds(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {

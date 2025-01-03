@@ -1,0 +1,29 @@
+{{- if .Values.certificates.certmanager.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "k8s-admission.fullname" . }}
+spec:
+  secretName: {{ include "k8s-admission.fullname" . }}-cert
+  dnsNames:
+  - "{{ include "k8s-admission.fullname" . }}"
+  - "{{ include "k8s-admission.fullname" . }}.{{ .Release.Namespace }}"
+  - "{{ include "k8s-admission.fullname" . }}.{{ .Release.Namespace }}.svc"
+  - "{{ include "k8s-admission.fullname" . }}.{{ .Release.Namespace }}.svc.cluster"
+  - "{{ include "k8s-admission.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+  issuerRef:
+  {{- if eq .Values.certificates.certmanager.issuer ""}}
+    name: {{ include "k8s-admission.fullname" . }}-selfsigned
+    {{ else }}
+    name: {{ .Values.certificates.certmanager.issuer }}
+  {{- end }}
+---
+{{- if eq .Values.certificates.certmanager.issuer ""}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "k8s-admission.fullname" . }}-selfsigned
+spec:
+  selfSigned: {}
+  {{- end }}
+{{- end }}

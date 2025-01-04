@@ -49,8 +49,7 @@ jobs:
 
   k8s-admission-build-img:
     needs: [k8s-admission-test]
-    uses: ./.github/workflows/reusable-docker-build.yml
-    # uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
+    uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
     with:
       build-name: ${{ github.repository_owner }}/k8s-admission
       build-tags: latest
@@ -66,8 +65,7 @@ jobs:
 
   k8s-admission-build-chart:
     needs: [k8s-admission-test]
-    uses: ./.github/workflows/reusable-helm-package.yml
-    # uses: hegerdes/helper-suite/.github/workflows/reusable-helm-package.yml@main
+    uses: hegerdes/helper-suite/.github/workflows/reusable-helm-package.yml@main
     with:
       chart-sources-dir: k8s-admission/charts/k8s-admission
       chart-test-config-dir: k8s-admission/charts

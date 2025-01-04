@@ -333,21 +333,21 @@ jobs:
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         continue-on-error: true
         with:
           subject-path: artifacts/crun*
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         continue-on-error: true
         with:
           subject-path: artifacts/youki*
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         continue-on-error: true
         with:
           subject-path: artifacts/pigz*

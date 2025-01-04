@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: 0.1.0
+description: A Helm chart for Kubernetes Admission Hooks
+name: k8s-admission
+type: application
+version: 0.1.0
+
+maintainers:
+  - name: hegerdes
+    url: https://henrikgerdes.me

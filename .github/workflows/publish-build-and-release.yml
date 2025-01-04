@@ -158,7 +158,6 @@ jobs:
         exclude:
           - os: windows-latest
             arch: linux/arm64
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -271,7 +270,7 @@ jobs:
 
   Release:
     runs-on: ubuntu-24.04
-    needs: [Build-Crun, Build-Youki]
+    needs: [Build-Crun, Build-Youki, Build-Pigz]
     permissions:
       contents: write
       id-token: write

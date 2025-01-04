@@ -33,4 +33,5 @@ jobs:
       chart-test-config-dir: tests/charts
       chart-publish: false
       chart-release-version: "0.1.0"
-      extra-commands: echo "Your commands here"
+      extra-commands-build: echo "Your commands here"
+      extra-commands-test: echo "Your commands here"

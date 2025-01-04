@@ -57,25 +57,36 @@ certificates:
   tls.crt: ""
   # -- The base64 encoded server ca.crt - needed if certmanager is not enabled
   ca.crt: ""
-  # -- Alternativly use an existing secret
-  exsistingSecretName: ""
+  # -- Alternatively use an existing secret
+  existingSecretName: ""
 
 mutatingWebhooks:
+  # -- Enable the mutating webhook creation
   enabled: true
+  # -- Enable proxy env inject webhook
   proxyEnvInject:
     enabled: true
+    # -- Enable namespace selector for the proxy env inject webhook
+    namespaceSelector:
+      matchLabels:
+        # kubernetes.io/metadata.name: my-ns
+        kubernetes.io/admission-inject-proxy: "true"
+
+validatingWebhooks:
+  # -- Enable the validating webhook creation
+  enabled: false
+  allowedImages:
+    # -- Enable image check webhook
+    enabled: true
+    # -- Enable namespace selector for the proxy env inject webhook
     namespaceSelector: {}
     # namespaceSelector:
     #   matchLabels:
     #     kubernetes.io/metadata.name: test
-
-validatingWebhooks:
-  enabled: true
-  allowdImages:
-    enabled: true
-    namespaceSelector: {}
   allowWithDelay:
+    # -- Enable always allow delay webhook
     enabled: true
+    # -- Enable namespace selector for the proxy env inject webhook
     namespaceSelector: {}
 
 # -- List of ENVs to configure the app.
@@ -146,17 +157,22 @@ affinity: {}
 
 # -- How the service is exposed.
 service:
+  # -- Service type
   type: ClusterIP
+  # -- Service and container port
   port: 8443
+  # -- Annotations for the service
   annotations: {}
-  externalTrafficPolicy: Cluster
+  # -- Service traffic policy
   internalTrafficPolicy: Cluster
+  # -- Service IP family
   ipFamilyPolicy: SingleStack
+  # -- Service prometheus annotation
   prometheus:
     enabled: false
-    scheme: http
+    scheme: https
     path: /metrics
-    port: 80
+    port: 8443
 
 # -- How the service is exposed via ingress.
 ingress:
@@ -189,17 +205,17 @@ httpRoute:
   annotations: {}
   # -- Which Gateways this Route is attached to
   parentRefs:
-  - name: gateway
-    sectionName: http
+    - name: gateway
+      sectionName: http
   # -- Hostnames matching HTTP header.
   hostnames:
-  - "example.com"
+    - "example.com"
   # -- List of rules and filters applied.
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /headers
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /headers
   #   filters:
   #   - type: RequestHeaderModifier
   #     requestHeaderModifier:
@@ -215,7 +231,6 @@ httpRoute:
   #     headers:
   #     - name: version
   #       value: v2
-
 
   # -- Autoscaling
 autoscaling:

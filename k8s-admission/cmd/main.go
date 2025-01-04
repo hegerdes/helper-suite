@@ -47,7 +47,7 @@ func init() {
 	// Port setup
 	defaultPort, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
-		defaultPort = 8080
+		defaultPort = 8443
 	}
 
 	kubehooks.Init()

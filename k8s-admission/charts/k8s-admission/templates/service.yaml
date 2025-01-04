@@ -8,7 +8,6 @@ metadata:
     {{- include "k8s-admission.service.annotations" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
-  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
   internalTrafficPolicy: {{ .Values.service.internalTrafficPolicy }}
   ipFamilyPolicy: {{ .Values.service.ipFamilyPolicy }}
   ports:

@@ -38,7 +38,7 @@
           },
           "type": "object"
         },
-        "exsistingSecretName": {
+        "existingSecretName": {
           "type": "string"
         },
         "tls.crt": {
@@ -199,7 +199,16 @@
               "type": "boolean"
             },
             "namespaceSelector": {
-              "properties": {},
+              "properties": {
+                "matchLabels": {
+                  "properties": {
+                    "kubernetes.io/admission-inject-proxy": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
               "type": "object"
             }
           },
@@ -256,9 +265,6 @@
         "annotations": {
           "properties": {},
           "type": "object"
-        },
-        "externalTrafficPolicy": {
-          "type": "string"
         },
         "internalTrafficPolicy": {
           "type": "string"
@@ -324,7 +330,7 @@
           },
           "type": "object"
         },
-        "allowdImages": {
+        "allowedImages": {
           "properties": {
             "enabled": {
               "type": "boolean"

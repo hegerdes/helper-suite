@@ -87,10 +87,10 @@ spec:
       volumes:
         - name: certs
           secret:
-          {{- if eq .Values.certificates.exsistingSecretName ""}}
+          {{- if eq .Values.certificates.existingSecretName ""}}
             secretName: {{ include "k8s-admission.fullname" . }}-cert
             {{ else }}
-            secretName: {{ .Values.certificates.exsistingSecretName }}
+            secretName: {{ .Values.certificates.existingSecretName }}
           {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 10 }}

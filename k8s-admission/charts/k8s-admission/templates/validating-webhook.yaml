@@ -16,14 +16,14 @@ metadata:
     {{- end }}
     {{- end }}
 webhooks:
-{{- if .Values.validatingWebhooks.allowdImages.enabled }}
+{{- if .Values.validatingWebhooks.allowedImages.enabled }}
 - name: allowed-images.hegerdes.com
   admissionReviewVersions: [v1]
   {{- if not .Values.certificates.certmanager.enabled }}
   clientConfig:
     caBundle: {{ index .Values.certificates "ca.crt" }}
   {{- end }}
-  {{- with .Values.validatingWebhooks.allowdImages.namespaceSelector }}
+  {{- with .Values.validatingWebhooks.allowedImages.namespaceSelector }}
   namespaceSelector:
     {{- toYaml . | nindent 4 }}
   {{- end }}

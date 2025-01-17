@@ -23,12 +23,17 @@ env:
 
 jobs:
   Build-Crun:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
         arch: [linux/amd64, linux/arm64]
+        include:
+          - os: ubuntu-24.04
+            arch: linux/amd64
+          - os: ubuntu-24.04-arm
+            arch: linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,13 +73,12 @@ jobs:
           context: scripts
           file: scripts/Dockerfile.crun
           tags: ${{ matrix.arch }}/wasmcrun:latest
-          platforms: ${{ matrix.arch }}
           build-args: CrunVersion=${{ steps.releases.outputs.CRUN_TAG }}
 
       - name: Inspect and extract artifacts
         run: |
           docker image inspect ${{ matrix.arch }}/wasmcrun:latest
-          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmcrun bash -c 'cp -rv /builder/*.tar.gz /export/'
+          docker run --rm -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmcrun bash -c 'cp -rv /builder/*.tar.gz /export/'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -90,6 +94,11 @@ jobs:
       fail-fast: false
       matrix:
         arch: [linux/amd64, linux/arm64]
+        include:
+          - os: ubuntu-24.04
+            arch: linux/amd64
+          - os: ubuntu-24.04-arm
+            arch: linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -129,14 +138,13 @@ jobs:
           context: scripts
           file: scripts/Dockerfile.youki
           tags: ${{ matrix.arch }}/wasmyouki:latest
-          platforms: ${{ matrix.arch }}
           shm-size: 12g
           build-args: YoukiVersion=${{ steps.releases.outputs.YOUKI_TAG }}
 
       - name: Inspect and extract artifacts
         run: |
           docker image inspect ${{ matrix.arch }}/wasmyouki:latest
-          docker run --rm --platform ${{ matrix.arch }} -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmyouki bash -c 'cp -rav /builder/youki/youki /export/youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}'
+          docker run --rm -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmyouki bash -c 'cp -rav /builder/youki/youki /export/youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}'
           sudo chmod +x $GITHUB_WORKSPACE/artifacts/*
 
       - name: Upload artifact
@@ -252,13 +260,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.32.0", "1.31.4", "1.30.8"]
+        version: ["1.32.1", "1.31.5", "1.30.9"]
     uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
     with:
       build-name: ${{ github.repository_owner }}/kubernetes-etcd
       build-tags: |
         v${{ matrix.version }}
-        ${{ (contains(matrix.version, '1.32.0') && 'latest' ) || '' }}
+        ${{ (contains(matrix.version, '1.32.1') && 'latest' ) || '' }}
       build-args: KUBE_VERSION=${{ matrix.version }}
       build-labels: MAINTAINER=${{ github.repository_owner }}
       build-dockerfile: scripts/Dockerfile.kube

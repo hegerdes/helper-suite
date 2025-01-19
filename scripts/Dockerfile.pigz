@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:bookworm AS build
 
 # Install dev deps
 RUN apt-get update && apt-get install -y \
@@ -16,3 +16,6 @@ RUN cd pigz \
     && tar czvf "pigz-linux-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" pigz unpigz pigz.pdf README
 
 RUN cp pigz/pigz*.tar.gz .
+
+FROM debian:bookworm AS final
+COPY --from=build /builder/*.tar.gz /builder/

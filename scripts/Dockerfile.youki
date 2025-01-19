@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:bookworm AS build
 
 # Install dev deps
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -22,6 +22,7 @@ ARG YoukiVersion=main
 ENV PATH="/root/.cargo/bin:${PATH}"
 WORKDIR /builder
 RUN git clone --branch ${YoukiVersion} --recurse-submodules https://github.com/youki-dev/youki.git
-RUN cd youki \
-    # && just youki-release \
-    && ./scripts/build.sh -o . -r -f wasm-wasmedge
+RUN cd youki && ./scripts/build.sh -o . -r -f wasm-wasmedge
+
+FROM debian:bookworm AS final
+COPY --from=build /builder/youki/youki /builder/youki/youki

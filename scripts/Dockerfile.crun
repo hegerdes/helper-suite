@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:bookworm AS build
 
 # Install dev deps
 RUN apt-get update -qq && apt-get install -y -qq \
@@ -33,3 +33,6 @@ RUN source $HOME/.wasmedge/env \
     && if [ "$(uname -m)" = "x86_64" ]; then ./crun --version; fi
 
 RUN cp crun/crun*.tar.gz .
+
+FROM debian:bookworm AS final
+COPY --from=build /builder/crun-*.tar.gz /builder

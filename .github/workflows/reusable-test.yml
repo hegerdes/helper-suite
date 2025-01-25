@@ -19,10 +19,10 @@ jobs:
   reusable-test-docker:
     uses: ./.github/workflows/reusable-docker-build.yml
     with:
-      build-name: ghcr.io/${{ github.repository_owner }}/helper-suite
+      build-name: ghcr.io/${{ github.repository_owner }}/helper-suite-test
       build-tags: latest
       build-labels: MAINTAINER=${{ github.repository_owner }}
-      push: false
+      push: true
       build-dockerfile: tests/Dockerfile
       extra-commands: echo "Your commands here"
 

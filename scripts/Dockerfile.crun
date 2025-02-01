@@ -35,4 +35,5 @@ RUN source $HOME/.wasmedge/env \
 RUN cp crun/crun*.tar.gz .
 
 FROM debian:bookworm AS final
+WORKDIR /builder
 COPY --from=build /builder/crun-*.tar.gz /builder

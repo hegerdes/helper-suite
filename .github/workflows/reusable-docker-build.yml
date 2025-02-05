@@ -248,7 +248,7 @@ jobs:
           echo "ATTEST_TAG=$ATTEST_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Create attestation for image
-        if: inputs.sign-with-github && steps.attest-image-tag.outputs.ATTEST_TAG != ''
+        if: inputs.sign-with-github && steps.attest-image-tag.outputs.ATTEST_TAG != '' && ! github.event.repository.private
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ steps.attest-image-tag.outputs.ATTEST_TAG }}

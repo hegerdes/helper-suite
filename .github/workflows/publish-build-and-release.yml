@@ -255,6 +255,75 @@ jobs:
           path: artifacts/*
           retention-days: 60
 
+  Build-ecr-credential-helper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest publish versions
+        id: releases
+        run: echo "K8S_AWS_CLOUD_TAG=$(curl -s https://api.github.com/repos/kubernetes/cloud-provider-aws/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout cloud-provider-aws
+        uses: actions/checkout@v4
+        with:
+          repository: kubernetes/cloud-provider-aws
+          path: cloud-provider-aws
+          ref: ${{ steps.releases.outputs.K8S_AWS_CLOUD_TAG }}
+
+      - name: Get publish hash-data
+        working-directory: cloud-provider-aws
+        id: metadata
+        run: |
+          echo "ECR_CP_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "^1.24"
+
+      - name: Build amd64
+        working-directory: cloud-provider-aws
+        run: |
+          go build -C $(pwd) -o ecr-credential-provider-${GOARCH} \
+          -ldflags "-s -w -X main.version=${K8S_AWS_CLOUD_TAG} -X main.commit=${ECR_CP_REPO_HASH}" \
+          ./cmd/ecr-credential-provider
+        env:
+          GOARCH: amd64
+
+      - name: Build arm64
+        working-directory: cloud-provider-aws
+        run: |
+          go build -C $(pwd) -o ecr-credential-provider-${GOARCH} \
+          -ldflags "-s -w -X main.version=${K8S_AWS_CLOUD_TAG} -X main.commit=${ECR_CP_REPO_HASH}" \
+          ./cmd/ecr-credential-provider
+        env:
+          GOARCH: arm64
+
+      - name: Create artifact dir
+        run: mkdir -p artifacts
+
+      - name: Package files
+        working-directory: cloud-provider-aws
+        run: |
+          chmod +x ecr-credential-provider*
+          mv ecr-credential-provider-amd64 ecr-credential-provider
+          tar -cvzf ecr-credential-provider-linux-amd64.tar.gz ecr-credential-provider
+          rm ecr-credential-provider
+          mv ecr-credential-provider-arm64 ecr-credential-provider
+          tar -cvzf ecr-credential-provider-linux-arm64.tar.gz ecr-credential-provider
+          mv *.tar.gz $GITHUB_WORKSPACE/artifacts/
+          ls -l $GITHUB_WORKSPACE/artifacts/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecr-credential-provider
+          path: artifacts/*
+          retention-days: 60
+
   Build-Kube-Etcd:
     if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
     strategy:
@@ -291,6 +360,7 @@ jobs:
           echo "CRUN_TAG=$(curl -sL https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
           echo "YOUKI_TAG=$(curl -sL https://api.github.com/repos/youki-dev/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
           echo "PIGZ_TAG=$(curl -s https://api.github.com/repos/madler/pigz/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
+          echo "K8S_AWS_CLOUD_TAG=$(curl -s https://api.github.com/repos/kubernetes/cloud-provider-aws/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
         uses: actions/checkout@v4
@@ -313,12 +383,20 @@ jobs:
           path: pigz
           ref: ${{ steps.releases.outputs.PIGZ_TAG }}
 
+      - name: Checkout cloud-provider-aws
+        uses: actions/checkout@v4
+        with:
+          repository: kubernetes/cloud-provider-aws
+          path: cloud-provider-aws
+          ref: ${{ steps.releases.outputs.K8S_AWS_CLOUD_TAG }}
+
       - name: Get publish hash-data
         id: metadata
         run: |
           cd $GITHUB_WORKSPACE/crun && echo "CRUN_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE/youki && echo "YOUKI_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE/pigz && echo "PIGZ_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          cd $GITHUB_WORKSPACE/cloud-provider-aws && echo "ECR_CP_REPO_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           cd $GITHUB_WORKSPACE && echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
 
       - name: Download artifatcs
@@ -360,6 +438,13 @@ jobs:
         with:
           subject-path: artifacts/pigz*
 
+      - name: Generate artifact attestation
+        if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/attest-build-provenance@v2
+        continue-on-error: true
+        with:
+          subject-path: artifacts/ecr-credential-provider*
+
       - name: Release
         id: release
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
@@ -375,6 +460,7 @@ jobs:
               * [youki](https://github.com/youki-dev/youki)
               * [pigz](https://github.com/madler/pigz)
               * [kube-etcd](https://kubernetes.io/)
+              * [ecr-credential-provider](https://github.com/kubernetes/cloud-provider-aws)
 
             ## Crun - wasm
             OCI compliant runtime for linux written in C.
@@ -389,6 +475,13 @@ jobs:
             OCI compliant runtime for linux written in rust.
             Unlike the upstream version it is build with wasm support for the amd64/arm64 arch.
             This release was build at [youki@${{ steps.metadata.outputs.YOUKI_REPO_HASH }}](https://github.com/youki-dev/youki/tree/${{ steps.metadata.outputs.YOUKI_REPO_HASH }})
+
+            For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
+            `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
+
+            ## AWS Cloud Provider - ECR Credential Provider
+            This plugin implements the [kubernetes credential-provider-api](https://kubernetes.io/docs/reference/config-api/kubelet-credentialprovider.v1/). This allows users to pull images from the ecr registries without having to create and reference a `image-pull-secret` in every namespace and deployment.
+            This release was build at [ecr-credential-provider@${{ steps.metadata.outputs.ECR_CP_REPO_HASH }}](https://github.com/kubernetes/cloud-provider-aws/tree/${{ steps.metadata.outputs.ECR_CP_REPO_HASH }})
 
             For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
             `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.

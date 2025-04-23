@@ -1,6 +1,6 @@
 FROM alpine:3.20 AS build
-ARG KUBE_VERSION=1.32.3
-ARG ETCD_VERSION=3.5.19
+ARG KUBE_VERSION=1.32.4
+ARG ETCD_VERSION=3.5.21
 
 # Install dev deps
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]

@@ -333,13 +333,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.32.3", "1.31.6", "1.30.10"]
+        version: ["1.32.4", "1.31.8", "1.30.12"]
     uses: hegerdes/helper-suite/.github/workflows/reusable-docker-build.yml@main
     with:
       build-name: ${{ github.repository_owner }}/kubernetes-etcd
       build-tags: |
         v${{ matrix.version }}
-        ${{ (contains(matrix.version, '1.32.3') && 'latest' ) || '' }}
+        ${{ (contains(matrix.version, '1.32.4') && 'latest' ) || '' }}
       build-args: KUBE_VERSION=${{ matrix.version }}
       build-labels: MAINTAINER=${{ github.repository_owner }}
       build-dockerfile: scripts/Dockerfile.kube

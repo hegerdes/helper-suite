@@ -2,7 +2,7 @@ name: Build and deploy Lambda function
 
 on:
   push:
-    branches: [main]
+    branches: [none]
     paths:
       - "http-get-push/**"
 

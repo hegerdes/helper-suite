@@ -1,12 +1,12 @@
 FROM alpine:3.20 AS build
 ARG KUBE_VERSION=1.33.2
-ARG ETCD_VERSION=3.6.0
+ARG ETCD_VERSION=3.6.1
 
 # Install dev deps
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
-RUN apk add --no-cache ca-certificates curl tar openssl bash
-
-RUN echo "Downloading Binaries" \
+RUN echo "Adding tools" \
+    && apk add --no-cache ca-certificates curl tar openssl bash \
+    && echo "Downloading Binaries" \
     && if [ "$(uname -m)" = "x86_64" ]; then export ARCH=amd64; else export ARCH=arm64; fi \
     && curl -sL --fail --output /tmp/kube-apiserver.tar.gz https://dl.k8s.io/v${KUBE_VERSION}/kubernetes-server-linux-${ARCH}.tar.gz \
     && curl -sL --fail --output /tmp/etcd.tar.gz https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-${ARCH}.tar.gz \
@@ -17,7 +17,8 @@ RUN echo "Downloading Binaries" \
     && kube-apiserver --version \
     && etcd --version \
     && kubectl version --client \
-    && rm -rf /tmp
+    && rm -rf /tmp \
+    && apk del curl tar zstd-libs brotli-libs
 
 COPY kube-start.sh csr.conf /
 EXPOSE 2379

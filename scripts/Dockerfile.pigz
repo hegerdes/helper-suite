@@ -1,4 +1,4 @@
-FROM debian:bookworm AS build
+FROM debian:trixie AS build
 
 # Install dev deps
 RUN apt-get update && apt-get install -y \
@@ -17,5 +17,5 @@ RUN cd pigz \
 
 RUN cp pigz/pigz*.tar.gz .
 
-FROM debian:bookworm AS final
+FROM debian:trixie AS final
 COPY --from=build /builder/*.tar.gz /builder/

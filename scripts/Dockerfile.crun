@@ -1,4 +1,4 @@
-FROM debian:bookworm AS build
+FROM debian:trixie AS build
 
 # Install dev deps
 RUN sed -i 's|^Components: main$|Components :main non-free non-free-firmware|' /etc/apt/sources.list.d/debian.sources
@@ -7,7 +7,7 @@ RUN apt-get update -qq && apt-get install -y -qq \
     libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev libyajl2 \
     libprotobuf-c-dev protobuf-c-compiler protobuf-compiler libgcrypt20-dev \
     python3-protobuf go-md2man libtool autoconf python3 automake \
-    golang-github-checkpoint-restore-go-criu-dev libcudart11.0
+    golang-github-checkpoint-restore-go-criu-dev libcudart12
 
 # Build Args
 ARG WasmEdgeApiVersion=0.1.0
@@ -35,6 +35,6 @@ RUN source $HOME/.wasmedge/env \
 
 RUN cp crun/crun*.tar.gz .
 
-FROM debian:bookworm AS final
+FROM debian:trixie AS final
 WORKDIR /builder
 COPY --from=build /builder/crun-*.tar.gz /builder

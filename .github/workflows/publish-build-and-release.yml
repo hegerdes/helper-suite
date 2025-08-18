@@ -36,7 +36,7 @@ jobs:
             arch: linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -49,7 +49,7 @@ jobs:
         run: echo "CRUN_TAG=$(curl -sL https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: containers/crun
           path: crun
@@ -101,7 +101,7 @@ jobs:
             arch: linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -114,7 +114,7 @@ jobs:
         run: echo "YOUKI_TAG=$(curl -sL https://api.github.com/repos/youki-dev/youki/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout youki
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: youki-dev/youki
           path: youki
@@ -168,7 +168,7 @@ jobs:
             arch: linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up QEMU
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -197,7 +197,7 @@ jobs:
         run: echo "PIGZ_TAG=$(curl -s https://api.github.com/repos/madler/pigz/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout pigz
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: madler/pigz
           path: pigz
@@ -259,14 +259,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get latest publish versions
         id: releases
         run: echo "K8S_AWS_CLOUD_TAG=$(curl -s https://api.github.com/repos/kubernetes/cloud-provider-aws/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout cloud-provider-aws
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: kubernetes/cloud-provider-aws
           path: cloud-provider-aws
@@ -367,28 +367,28 @@ jobs:
           echo "K8S_AWS_CLOUD_TAG=$(curl -s https://api.github.com/repos/kubernetes/cloud-provider-aws/tags | jq -r .[0].name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: containers/crun
           path: crun
           ref: ${{ steps.releases.outputs.CRUN_TAG }}
 
       - name: Checkout youki
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: youki-dev/youki
           path: youki
           ref: ${{ steps.releases.outputs.YOUKI_TAG }}
 
       - name: Checkout pigz
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: madler/pigz
           path: pigz
           ref: ${{ steps.releases.outputs.PIGZ_TAG }}
 
       - name: Checkout cloud-provider-aws
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: kubernetes/cloud-provider-aws
           path: cloud-provider-aws

@@ -494,13 +494,14 @@ jobs:
 
             ## Pigz
             A parallel implementation of gzip for modern multi-processor, multi-core machines.
-            You can most likly use the version form your package manager when you are on linux. But for windows there is no official release, so you can use this one.
+            You can most likely use the version form your package manager when you are on linux. But for windows there is no official release, so you can use this one.
+            This release was build at [pigz@${{ steps.metadata.outputs.PIGZ_REPO_HASH }}](https://github.com/madler/pigz/tree/${{ steps.metadata.outputs.PIGZ_REPO_HASH }})
 
             ## Kube-Etcd
             A container image containing kubernetes and etcd. It is build for the amd64/arm64 arch.
-            This image is inteded to be used for testing in local and CI setups to have a fully working kubernetes api as an endpint. Certs are generated automaticly on startup, if they are not externaly mounted.
+            This image is intended to be used for testing in local and CI setups to have a fully working kubernetes api as an endpoint. Certs are generated automatically on startup, if they are not externally mounted.
 
-            Note that the container behaves like a nomal kubernetes api but can not spawn pods.
+            Note that the container behaves like a normal kubernetes api but can not spawn pods.
             Images can be found on [DockerHub](https://hub.docker.com/r/hegerdes/kubernetes-etcd)
           token: ${{ secrets.GITHUB_TOKEN }}
           files: artifacts/*

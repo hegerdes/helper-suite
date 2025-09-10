@@ -280,7 +280,7 @@ jobs:
           echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "^1.24"
 
@@ -425,28 +425,28 @@ jobs:
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         continue-on-error: true
         with:
           subject-path: artifacts/crun*
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         continue-on-error: true
         with:
           subject-path: artifacts/youki*
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         continue-on-error: true
         with:
           subject-path: artifacts/pigz*
 
       - name: Generate artifact attestation
         if: ${{ github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         continue-on-error: true
         with:
           subject-path: artifacts/ecr-credential-provider*

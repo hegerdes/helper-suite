@@ -305,7 +305,7 @@ jobs:
           DOCKER_IMAGE_NAMES: ${{ inputs.build-name }}
           DOCKER_IMAGE_TAGS: ${{ inputs.build-tags }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 

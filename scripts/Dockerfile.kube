@@ -1,6 +1,6 @@
 FROM alpine:3.22 AS build
 ARG KUBE_VERSION=1.34.1
-ARG ETCD_VERSION=3.6.4
+ARG ETCD_VERSION=3.6.5
 
 # Install dev deps
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
@@ -19,7 +19,6 @@ RUN echo "Adding tools" \
     && kubectl version --client \
     && rm -rf /tmp/* \
     && mkdir -p -m 600 /etcd-data \
-    && chmod -R 666 /home \
     && apk del curl tar zstd-libs brotli-libs
 
 COPY kube-start.sh csr.conf /

@@ -11,13 +11,25 @@ CERTS_DIR=${CERTS_DIR:-/tmp/certs}
 ETCD_DATA=${ETCD_DATA:-/etcd-data}
 CLUSTER_NAME=${CLUSTER_NAME:-demo}
 USER_TOKENS=${USER_TOKENS:-$DEFAULT_USER_TOKENS}
-K8S_CURRENT_SERVER=${K8S_CURRENT_SERVER:-"https://localhost:6443"}
+K8S_KUBE_PORT=${K8S_KUBE_PORT:-6443}
+K8S_CURRENT_SERVER=${K8S_CURRENT_SERVER:-"https://localhost:$K8S_KUBE_PORT"}
 EXTERNAL_HOST=${EXTERNAL_HOST:-$(hostname)}
 KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
-mkdir -p $CERTS_DIR $ETCD_DATA
+
+if [ "$(id -u)" -ne 0 ]; then
+    USER_DIR_PREFIX=/tmp/home/kube
+    mkdir -p $USER_DIR_PREFIX
+    cp csr.conf $USER_DIR_PREFIX/csr.conf
+
+    # In case of non-root user, remap dirs
+    if [ $ETCD_DATA == "/etcd-data" ]; then
+        ETCD_DATA=$USER_DIR_PREFIX/tmp/etcd-data
+    fi
+fi
 
 # IPs
-echo "IPs: $(hostname -i)"
+echo "Hostname: $(hostname);IPs: $(hostname -i)"
+mkdir -p $CERTS_DIR $ETCD_DATA
 
 # User credentials
 if [ ! -f "$CERTS_DIR/token.csv" ]; then
@@ -43,10 +55,11 @@ if [ ! -f "$CERTS_DIR/kube-apiserver.key" ]; then
 fi
 if [ ! -f "$CERTS_DIR/kube-apiserver.crt" ]; then
     echo "Generating kube-apiserver certificate"
-    openssl req -new -key $CERTS_DIR/kube-apiserver.key -out $CERTS_DIR/kube-apiserver.csr -config csr.conf
+    sed -i "/^DNS\.7 =/a DNS.8 = $(hostname)" ${USER_DIR_PREFIX}/csr.conf
+    openssl req -new -key $CERTS_DIR/kube-apiserver.key -out $CERTS_DIR/kube-apiserver.csr -config ${USER_DIR_PREFIX}/csr.conf
     openssl x509 -req -in $CERTS_DIR/kube-apiserver.csr -CA $CERTS_DIR/ca.crt -CAkey $CERTS_DIR/ca.key \
         -CAcreateserial -out $CERTS_DIR/kube-apiserver.crt -days 10000 \
-        -extensions v3_ext -extfile csr.conf
+        -extensions v3_ext -extfile ${USER_DIR_PREFIX}/csr.conf
 fi
 
 # client
@@ -56,10 +69,10 @@ if [ ! -f "$CERTS_DIR/kube-admin-client.key" ]; then
 fi
 if [ ! -f "$CERTS_DIR/kube-admin-client.crt" ]; then
     echo "Generating kube-admin-client certificate"
-    openssl req -new -key $CERTS_DIR/kube-admin-client.key -out $CERTS_DIR/kube-admin-client.csr -config csr.conf
+    openssl req -new -key $CERTS_DIR/kube-admin-client.key -out $CERTS_DIR/kube-admin-client.csr -config ${USER_DIR_PREFIX}/csr.conf
     openssl x509 -req -in $CERTS_DIR/kube-admin-client.csr -CA $CERTS_DIR/ca.crt -CAkey $CERTS_DIR/ca.key \
         -CAcreateserial -out $CERTS_DIR/kube-admin-client.crt -days 10000 \
-        -extensions v3_ext -extfile csr.conf
+        -extensions v3_ext -extfile ${USER_DIR_PREFIX}/csr.conf
 fi
 
 kubectl config set-cluster $CLUSTER_NAME \
@@ -115,9 +128,10 @@ kube-apiserver \
     --bind-address=0.0.0.0 \
     --enable-bootstrap-token-auth \
     --external-hostname=$EXTERNAL_HOST \
-    --secure-port=6443 \
+    --secure-port=$K8S_KUBE_PORT \
     --token-auth-file=$CERTS_DIR/token.csv \
     --authorization-mode=Node,RBAC $KUBE_APISERVER_EXTRA_ARGS &
 KUBE_APISERVER_PID=$!
 
+echo "Kube-apiserver listening on port $K8S_KUBE_PORT; etcd on 2379"
 sleep 7d

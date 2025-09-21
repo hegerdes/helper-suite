@@ -17,7 +17,9 @@ RUN echo "Adding tools" \
     && kube-apiserver --version \
     && etcd --version \
     && kubectl version --client \
-    && rm -rf /tmp \
+    && rm -rf /tmp/* \
+    && mkdir -p -m 600 /etcd-data \
+    && chmod -R 666 /home \
     && apk del curl tar zstd-libs brotli-libs
 
 COPY kube-start.sh csr.conf /

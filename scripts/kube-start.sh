@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eou pipefail
+set -euo pipefail
 echo "Will start kube-apiserver & etcd:"
 kube-apiserver --version
 etcd --version
@@ -8,7 +8,8 @@ kubectl version --client
 
 DEFAULT_USER_TOKENS="31ada4fd-adec-460c-809a-9e56ceb75269,admin,admin,system:masters"
 CERTS_DIR=${CERTS_DIR:-/tmp/certs}
-ETCD_DATA=${ETCD_DATA:-/etcd-data}
+ETCD_DATA_DIR=${ETCD_DATA_DIR:-/etcd-data}
+ETCD_RESTORE_DIR=${ETCD_RESTORE_DIR:-/etcd-restore}
 CLUSTER_NAME=${CLUSTER_NAME:-demo}
 USER_TOKENS=${USER_TOKENS:-$DEFAULT_USER_TOKENS}
 K8S_KUBE_PORT=${K8S_KUBE_PORT:-6443}
@@ -16,20 +17,22 @@ K8S_CURRENT_SERVER=${K8S_CURRENT_SERVER:-"https://localhost:$K8S_KUBE_PORT"}
 EXTERNAL_HOST=${EXTERNAL_HOST:-$(hostname)}
 KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
 
-if [ "$(id -u)" -ne 0 ]; then
+if [ "$(id -u)" -qe 0 ]; then
+    USER_DIR_PREFIX=/root
+    else
     USER_DIR_PREFIX=/tmp/home/kube
     mkdir -p $USER_DIR_PREFIX
     cp csr.conf $USER_DIR_PREFIX/csr.conf
 
     # In case of non-root user, remap dirs
-    if [ $ETCD_DATA == "/etcd-data" ]; then
-        ETCD_DATA=$USER_DIR_PREFIX/tmp/etcd-data
+    if [ $ETCD_DATA_DIR == "/etcd-data" ]; then
+        ETCD_DATA_DIR=$USER_DIR_PREFIX/tmp/etcd-data
     fi
 fi
 
 # IPs
 echo "Hostname: $(hostname);IPs: $(hostname -i)"
-mkdir -p $CERTS_DIR $ETCD_DATA
+mkdir -p $CERTS_DIR $ETCD_DATA_DIR
 
 # User credentials
 if [ ! -f "$CERTS_DIR/token.csv" ]; then
@@ -100,15 +103,28 @@ if [ ! -z ${CI_BUILDS_DIR+x} ]; then
     cp -av $CERTS_DIR/kubeconf.yaml $CI_BUILDS_DIR/kubeconf.yaml
 fi
 
-# Trap signals and kill subprocesses
 echo "Starting etcd & kube-apiserver..."
-trap 'echo "Script is terminating..."; kill $KUBE_APISERVER_PID; kill $ETCD_PID; exit' SIGINT SIGTERM
+
+if compgen -G "$ETCD_RESTORE_DIR/*.db" > /dev/null; then
+    echo "Found .db files:"
+    ls -lh $ETCD_RESTORE_DIR/*.db
+    LATEST_DUMP=$(ls -1t "$ETCD_RESTORE_DIR"/*.db 2>/dev/null | head -n1)
+
+    # Restore etcd from snapshot if not already restored
+    if [ ! -f "${ETCD_DATA_DIR}/hostname.txt" ]; then
+        echo "Restoring etcd from snapshot ${LATEST_DUMP}..."
+        etcdutl snapshot restore $LATEST_DUMP
+        echo "Restore done"
+    else
+        echo "etcd data dir already initialized, skipping restore"
+    fi
+fi
 
 /usr/local/bin/etcd \
     --data-dir \
-    $ETCD_DATA \
+    $ETCD_DATA_DIR \
     --name \
-    demo-etcd \
+    kube-etcd \
     --advertise-client-urls \
     http://$(hostname):2379 \
     --listen-client-urls \
@@ -131,7 +147,12 @@ kube-apiserver \
     --secure-port=$K8S_KUBE_PORT \
     --token-auth-file=$CERTS_DIR/token.csv \
     --authorization-mode=Node,RBAC $KUBE_APISERVER_EXTRA_ARGS &
+
 KUBE_APISERVER_PID=$!
+hostname > $ETCD_DATA_DIR/hostname.txt
+
+# Trap signals and kill subprocesses
+trap 'echo "Script is terminating..."; kill $KUBE_APISERVER_PID; kill $ETCD_PID; exit' SIGINT SIGTERM
 
 echo "Kube-apiserver listening on port $K8S_KUBE_PORT; etcd on 2379"
-sleep 7d
+sleep infinity

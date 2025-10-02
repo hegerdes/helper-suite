@@ -1,8 +1,9 @@
 FROM alpine:3.22 AS build
 ARG KUBE_VERSION=1.34.1
 ARG ETCD_VERSION=3.6.5
+ENV ETCDCTL_API=3
 
-# Install dev deps
+# Install kubeapiserver, etcd and kubectl
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 RUN echo "Adding tools" \
     && apk add --no-cache ca-certificates curl tar openssl bash \
@@ -12,17 +13,20 @@ RUN echo "Adding tools" \
     && curl -sL --fail --output /tmp/etcd.tar.gz https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-${ARCH}.tar.gz \
     && curl -sL --fail --output /usr/bin/kubectl "https://dl.k8s.io/release/v${KUBE_VERSION}/bin/linux/${ARCH}/kubectl" \
     && tar -xzvf /tmp/kube-apiserver.tar.gz -C /usr/local/bin --strip-components=3 kubernetes/server/bin/kube-apiserver \
-    && tar -xzvf /tmp/etcd.tar.gz -C /usr/local/bin --strip-components=1 etcd-v${ETCD_VERSION}-linux-${ARCH}/etcd \
+    && tar -xzvf /tmp/etcd.tar.gz -C /usr/local/bin --strip-components=1 etcd-v${ETCD_VERSION}-linux-${ARCH}/etcd etcd-v${ETCD_VERSION}-linux-${ARCH}/etcdutl \
     && chmod +x /usr/bin/kubectl \
     && kube-apiserver --version \
     && etcd --version \
+    && etcdutl version \
     && kubectl version --client \
     && rm -rf /tmp/* \
     && mkdir -p -m 600 /etcd-data \
+    && mkdir -p -m 600 /etcd-restore \
     && apk del curl tar zstd-libs brotli-libs
 
-COPY kube-start.sh csr.conf /
+COPY kube-start.sh csr.conf /root/
 EXPOSE 2379
 EXPOSE 6443
 VOLUME /etcd-data
-ENTRYPOINT [ "/kube-start.sh" ]
+WORKDIR /root
+ENTRYPOINT [ "/root/kube-start.sh" ]

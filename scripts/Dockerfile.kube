@@ -7,7 +7,7 @@ ENV ETCDCTL_API=3
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 RUN echo "Adding tools" \
     && apk add --no-cache ca-certificates curl tar openssl bash \
-    && echo "Downloading Binaries" \
+    && echo "Downloading Binaries..." \
     && if [ "$(uname -m)" = "x86_64" ]; then export ARCH=amd64; else export ARCH=arm64; fi \
     && curl -sL --fail --output /tmp/kube-apiserver.tar.gz https://dl.k8s.io/v${KUBE_VERSION}/kubernetes-server-linux-${ARCH}.tar.gz \
     && curl -sL --fail --output /tmp/etcd.tar.gz https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-${ARCH}.tar.gz \
@@ -20,6 +20,7 @@ RUN echo "Adding tools" \
     && etcdutl version \
     && kubectl version --client \
     && rm -rf /tmp/* \
+    && chmod +rx -R /root/ \
     && mkdir -p -m 600 /etcd-data \
     && mkdir -p -m 600 /etcd-restore \
     && apk del curl tar zstd-libs brotli-libs

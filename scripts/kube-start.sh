@@ -17,22 +17,26 @@ K8S_CURRENT_SERVER=${K8S_CURRENT_SERVER:-"https://localhost:$K8S_KUBE_PORT"}
 EXTERNAL_HOST=${EXTERNAL_HOST:-$(hostname)}
 KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
 
-if [ "$(id -u)" -qe 0 ]; then
-    USER_DIR_PREFIX=/root
+echo "Running as user: $(id -un):$(id -gn)"
+if [ "$(id -u)" -eq 0 ]; then
+        USER_DIR_PREFIX=/root
     else
-    USER_DIR_PREFIX=/tmp/home/kube
-    mkdir -p $USER_DIR_PREFIX
-    cp csr.conf $USER_DIR_PREFIX/csr.conf
+        USER_DIR_PREFIX=/tmp/home/kube
+        mkdir -p $USER_DIR_PREFIX
+        cp csr.conf $USER_DIR_PREFIX/csr.conf
 
-    # In case of non-root user, remap dirs
-    if [ $ETCD_DATA_DIR == "/etcd-data" ]; then
-        ETCD_DATA_DIR=$USER_DIR_PREFIX/tmp/etcd-data
-    fi
+        # In case of non-root user, remap dirs
+        if [ $ETCD_DATA_DIR == "/etcd-data" ]; then
+            ETCD_DATA_DIR=$USER_DIR_PREFIX/etcd-data
+        fi
 fi
 
-# IPs
-echo "Hostname: $(hostname);IPs: $(hostname -i)"
-mkdir -p $CERTS_DIR $ETCD_DATA_DIR
+# Hostname & IPs
+echo "Hostname: $(hostname)"
+echo "IPs: $(hostname -i)"
+echo "Data dir: $ETCD_DATA_DIR"
+mkdir -p $CERTS_DIR
+mkdir -p -m 700 $ETCD_DATA_DIR
 
 # User credentials
 if [ ! -f "$CERTS_DIR/token.csv" ]; then

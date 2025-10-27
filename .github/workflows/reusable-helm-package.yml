@@ -277,7 +277,7 @@ jobs:
           git fetch --all
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: helm-chart-${{ steps.env-setup.outputs.CHART_NAME }}-${{ inputs.chart-release-version }}
           path: charts/.ci-build/*

@@ -404,7 +404,7 @@ jobs:
           cd $GITHUB_WORKSPACE && echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
 
       - name: Download artifatcs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
 

@@ -9,3 +9,6 @@ k8s-admission/dist/*
 k8s-admission/k8s
 k8s-admission/tools/certificates
 k8s-admission/admission-webhook
+tests/aws-web-identity/python-src/package
+.terraform
+builds

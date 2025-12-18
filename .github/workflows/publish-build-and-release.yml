@@ -81,7 +81,7 @@ jobs:
           docker run --rm -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmcrun bash -c 'cp -rv /builder/*.tar.gz /export/'
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-crun-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
           path: artifacts/*
@@ -148,7 +148,7 @@ jobs:
           sudo chmod +x $GITHUB_WORKSPACE/artifacts/*
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-youki-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
           path: artifacts/*
@@ -249,7 +249,7 @@ jobs:
           cp -rv *.tar.gz $GITHUB_WORKSPACE/artifacts/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: pigz-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
           path: artifacts/*
@@ -322,7 +322,7 @@ jobs:
           ls -l $GITHUB_WORKSPACE/artifacts/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ecr-credential-provider
           path: artifacts/*

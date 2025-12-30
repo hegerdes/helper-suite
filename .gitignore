@@ -12,3 +12,4 @@ k8s-admission/admission-webhook
 tests/aws-web-identity/python-src/package
 .terraform
 builds
+scripts/conf/generated

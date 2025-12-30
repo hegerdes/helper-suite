@@ -1,4 +1,4 @@
-FROM alpine:3.22 AS build
+FROM alpine:3.23 AS build
 ARG KUBE_VERSION=1.35.0
 ARG ETCD_VERSION=3.6.7
 ENV ETCDCTL_API=3
@@ -25,7 +25,7 @@ RUN echo "Adding tools" \
     && mkdir -p -m 600 /etcd-restore \
     && apk del curl tar zstd-libs brotli-libs
 
-COPY kube-start.sh csr.conf /root/
+COPY conf/kube-start.sh conf/csr.conf /root/
 EXPOSE 2379
 EXPOSE 6443
 VOLUME /etcd-data

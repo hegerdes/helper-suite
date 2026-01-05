@@ -148,7 +148,7 @@ jobs:
       GH_WORKFLOW_ACTOR: "${{ github.actor }}"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.build-repo }}
 
@@ -270,7 +270,7 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.build-repo }}
 

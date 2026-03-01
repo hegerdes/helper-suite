@@ -148,7 +148,7 @@ jobs:
       GH_WORKFLOW_ACTOR: "${{ github.actor }}"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.build-repo }}
 
@@ -270,7 +270,7 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.build-repo }}
 
@@ -307,7 +307,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Run checkov
         id: checkov_run

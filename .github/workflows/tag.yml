@@ -2,7 +2,7 @@ name: Build and Release WASM-CRUN
 
 on:
   schedule:
-    - cron: '0 0 1 * *'
+    - cron: "0 0 1 * *"
 
 permissions:
   contents: write
@@ -11,9 +11,8 @@ jobs:
   Tag:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get Date
         id: tag_date

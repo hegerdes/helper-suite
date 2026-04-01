@@ -1,4 +1,4 @@
-name: Build and Release WASM-CRUN
+name: Build and Release Trigger
 
 on:
   schedule:

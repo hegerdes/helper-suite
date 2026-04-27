@@ -1,8 +1,9 @@
-FROM debian:trixie AS build
+FROM rust:1-trixie AS build
 
 # Install dev deps
 RUN sed -i 's|^Components: main$|Components :main non-free non-free-firmware|' /etc/apt/sources.list.d/debian.sources
 RUN apt-get update -qq && apt-get install -y -qq \
+    cmake musl-tools clang llvm libclang-dev \
     make curl git gcc build-essential pkgconf m4 libtool libsystemd-dev \
     libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev libyajl2 \
     libprotobuf-c-dev protobuf-c-compiler protobuf-compiler libgcrypt20-dev \
@@ -11,6 +12,7 @@ RUN apt-get update -qq && apt-get install -y -qq \
 
 # Build Args
 ARG WasmEdgeApiVersion=0.1.0
+ARG LibKrunVersion=main
 ARG CrunVersion=main
 
 # Install wasmedge
@@ -21,16 +23,20 @@ RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/i
 
 WORKDIR /builder
 RUN git clone --branch ${CrunVersion} https://github.com/containers/crun.git
+RUN git clone --branch ${LibKrunVersion} https://github.com/containers/libkrun.git
+
+RUN --mount=type=cache,target=/builder/libkrun/target/ cd libkrun && make && make install
 RUN source $HOME/.wasmedge/env \
     && cd crun \
     && ./autogen.sh \
-    && ./configure --with-wasmedge \
+    && ./configure --with-wasmedge --with-libkrun \
     && make -j $(nproc) \
     && mkdir -p wasmlibs \
-    && cp $HOME/.wasmedge/lib/libwasmedge.so.${WasmEdgeApiVersion} wasmlibs/libwasmedge.so.${WasmEdgeApiVersion} \
-    && ln -s wasmlibs/libwasmedge.so.${WasmEdgeApiVersion} wasmlibs/libwasmedge.so.0 \
-    && ln -s wasmlibs/libwasmedge.so.0 wasmlibs/libwasmedge.so \
-    && tar czvf "crun-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" crun COPYING NEWS README.md wasmlibs/* \
+    && mkdir -p krunlibs \
+    && cp -v /usr/local/lib64/libkrun.so* krunlibs/ \
+    && cp $HOME/.wasmedge/lib/libwasmedge.so* wasmlibs/ \
+    && tar czvf "crun-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" \
+    crun COPYING NEWS README.md wasmlibs krunlibs \
     && if [ "$(uname -m)" = "x86_64" ]; then ./crun --version; fi
 
 RUN cp crun/crun*.tar.gz .

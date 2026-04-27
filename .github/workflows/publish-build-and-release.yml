@@ -46,7 +46,9 @@ jobs:
 
       - name: Get latest publish versions
         id: releases
-        run: echo "CRUN_TAG=$(curl -sL https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "CRUN_TAG=$(curl -sL https://api.github.com/repos/containers/crun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
+          echo "LIBKRUN_TAG=$(curl -sL https://api.github.com/repos/containers/libkrun/releases/latest | jq -r .tag_name)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout crun
         uses: actions/checkout@v6
@@ -72,18 +74,20 @@ jobs:
           load: true
           context: scripts
           file: scripts/Dockerfile.crun
-          tags: ${{ matrix.arch }}/wasmcrun:latest
-          build-args: CrunVersion=${{ steps.releases.outputs.CRUN_TAG }}
+          tags: ${{ matrix.arch }}/crun:latest
+          build-args: |
+            CrunVersion=${{ steps.releases.outputs.CRUN_TAG }}
+            LibKrunVersion=${{ steps.releases.outputs.LIBKRUN_TAG }}
 
       - name: Inspect and extract artifacts
         run: |
-          docker image inspect ${{ matrix.arch }}/wasmcrun:latest
-          docker run --rm -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/wasmcrun bash -c 'cp -rv /builder/*.tar.gz /export/'
+          docker image inspect ${{ matrix.arch }}/crun:latest
+          docker run --rm -v $GITHUB_WORKSPACE/artifacts:/export ${{ matrix.arch }}/crun bash -c 'cp -rv /builder/*.tar.gz /export/'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
-          name: wasm-crun-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
+          name: custom-crun-${{ steps.metadata.outputs.RELEASE_ARTIFACT }}
           path: artifacts/*
           retention-days: 60
 
@@ -407,7 +411,7 @@ jobs:
         run: |
           ls -la
           # Moving crun
-          for i in wasm-crun*; do echo "Crun: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
+          for i in custom-crun*; do echo "Crun: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           # Moving ecr-credential-provider
           for i in ecr-credential-provider*; do echo "ecr-cp: ${i}"; mv $i/*.tar.gz .; rm -rf $i; done
           # Rename youki
@@ -462,9 +466,9 @@ jobs:
               * [kube-etcd](https://kubernetes.io/)
               * [ecr-credential-provider](https://github.com/kubernetes/cloud-provider-aws)
 
-            ## Crun - wasm
+            ## Crun - wasm/krun
             OCI compliant runtime for linux written in C.
-            Unlike the upstream version it is build with wasm support for the amd64/arm64 arch.
+            Unlike the upstream version it is build with wasm and krun support for the amd64/arm64 arch.
             This release was build at [crun@${{ steps.metadata.outputs.CRUN_REPO_HASH }}](https://github.com/containers/crun/tree/${{ steps.metadata.outputs.CRUN_REPO_HASH }})
 
             The libs in the archive need to be added to your system LIBs PATH.

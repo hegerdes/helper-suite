@@ -1,4 +1,4 @@
-FROM debian:trixie AS build
+FROM rust:1-trixie AS build
 
 # Install dev deps
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -15,7 +15,6 @@ RUN apt-get update -qq && apt-get install -y -qq \
     libclang-dev
 
 # RUN curl -sSf https://just.systems/install.sh | bash -s -- --to /usr/bin
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 # Build Args
 ARG YoukiVersion=main
@@ -26,3 +25,4 @@ RUN cd youki && ./scripts/build.sh -o . -r -f wasm-wasmedge
 
 FROM debian:trixie AS final
 COPY --from=build /builder/youki/youki /builder/youki/youki
+COPY --from=build /builder/youki/LICENSE /builder/youki/LICENSE

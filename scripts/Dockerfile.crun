@@ -8,7 +8,7 @@ RUN apt-get update -qq && apt-get install -y -qq \
     libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev libyajl2 \
     libprotobuf-c-dev protobuf-c-compiler protobuf-compiler libgcrypt20-dev \
     python3-protobuf go-md2man libtool autoconf python3 automake \
-    golang-github-checkpoint-restore-go-criu-dev libcudart12
+    golang-github-checkpoint-restore-go-criu-dev libcudart12 libcriu-dev jq gawk gperf
 
 # Build Args
 ARG WasmEdgeApiVersion=0.1.0
@@ -16,10 +16,9 @@ ARG LibKrunVersion=main
 ARG CrunVersion=main
 
 # Install wasmedge
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # See https://wasmedge.org/book/en/quick_start/install.html
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s --
-# RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v 0.14.1
 
 WORKDIR /builder
 RUN git clone --branch ${CrunVersion} https://github.com/containers/crun.git

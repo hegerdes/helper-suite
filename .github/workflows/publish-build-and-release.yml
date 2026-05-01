@@ -473,7 +473,7 @@ jobs:
 
             The libs in the archive need to be added to your system LIBs PATH.
             See these [instructions](https://blog.andrewbeacock.com/2007/10/how-to-add-shared-libraries-to-linuxs.html) for how-to do so.
-            Also the package libyajl2 is requiered.
+            The package libyajl2 is requiered, krun needs a kernel which can be provided via [libkrunfw](https://github.com/containers/libkrunfw).
 
             ## Youki - wasm
             OCI compliant runtime for linux written in rust.

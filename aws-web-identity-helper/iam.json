@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:TagGetWebIdentityToken",
+        "sts:SetContext",
+        "sts:GetWebIdentityToken"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "NumericLessThanEquals": {
+          "sts:DurationSeconds": "300"
+        },
+        "StringEquals": {
+          "aws:RequestTag/account": "842273266054",
+          "aws:RequestTag/issuer": "https://xxx.tokens.sts.global.api.aws",
+          "sts:SigningAlgorithm": "ES384"
+        }
+      }
+    }
+  ]
+}

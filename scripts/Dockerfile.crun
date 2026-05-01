@@ -7,8 +7,8 @@ RUN apt-get update -qq && apt-get install -y -qq \
     make curl git gcc build-essential pkgconf m4 libtool libsystemd-dev \
     libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev libyajl2 \
     libprotobuf-c-dev protobuf-c-compiler protobuf-compiler libgcrypt20-dev \
-    python3-protobuf go-md2man libtool autoconf python3 automake \
-    golang-github-checkpoint-restore-go-criu-dev libcudart12 libcriu-dev jq gawk gperf
+    python3-protobuf go-md2man libtool autoconf python3 automake bison \
+    golang-github-checkpoint-restore-go-criu-dev libcudart12 libcriu-dev jq gawk gperf flex
 
 # Build Args
 ARG WasmEdgeApiVersion=0.1.0
@@ -21,8 +21,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s --
 
 WORKDIR /builder
-RUN git clone --branch ${CrunVersion} https://github.com/containers/crun.git
-RUN git clone --branch ${LibKrunVersion} https://github.com/containers/libkrun.git
+RUN git clone --branch ${CrunVersion} --depth 20 https://github.com/containers/crun.git
+RUN git clone --branch ${LibKrunVersion} --depth 20 https://github.com/containers/libkrun.git
 
 RUN --mount=type=cache,target=/builder/libkrun/target/ cd libkrun && make && make install
 RUN source $HOME/.wasmedge/env \

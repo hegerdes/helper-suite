@@ -35,6 +35,7 @@ RUN source $HOME/.wasmedge/env \
     && cp -v /usr/local/lib64/libkrun.so* krunlibs/ \
     && cp $HOME/.wasmedge/lib/libwasmedge.so* wasmlibs/ \
     && tar czvf "crun-$(git rev-parse --short HEAD)_$(uname -m).tar.gz" \
+     --exclude='*.so' --exclude='krunlibs/*.so.1' --exclude='wasmlibs/*.so.0' \
     crun COPYING NEWS README.md wasmlibs krunlibs \
     && if [ "$(uname -m)" = "x86_64" ]; then ./crun --version; fi
 

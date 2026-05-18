@@ -8,10 +8,11 @@ RUN apt-get update -qq && apt-get install -y -qq \
     libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev libyajl2 \
     libprotobuf-c-dev protobuf-c-compiler protobuf-compiler libgcrypt20-dev \
     python3-protobuf go-md2man libtool autoconf python3 automake bison \
-    golang-github-checkpoint-restore-go-criu-dev libcudart12 libcriu-dev jq gawk gperf flex
+    golang-github-checkpoint-restore-go-criu-dev libcudart12 libcriu-dev \
+    jq gawk gperf flex libjson-c-dev
 
 # Build Args
-ARG WasmEdgeApiVersion=0.1.0
+ARG WasmEdgeApiVersion=0.1.1
 ARG LibKrunVersion=main
 ARG CrunVersion=main
 
@@ -41,6 +42,6 @@ RUN source $HOME/.wasmedge/env \
 
 RUN cp crun/crun*.tar.gz .
 
-FROM debian:trixie AS final
+FROM rust:1-trixie AS final
 WORKDIR /builder
 COPY --from=build /builder/crun-*.tar.gz /builder

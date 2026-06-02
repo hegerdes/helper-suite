@@ -212,7 +212,7 @@ jobs:
 
       - name: Docker metadata
         id: metadata
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ inputs.build-name }}
           tags: ${{ inputs.build-tags }}

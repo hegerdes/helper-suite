@@ -21,7 +21,7 @@ ARG YoukiVersion=main
 ENV PATH="/root/.cargo/bin:${PATH}"
 WORKDIR /builder
 RUN git clone --branch ${YoukiVersion} --recurse-submodules https://github.com/youki-dev/youki.git
-RUN cd youki && ./scripts/build.sh -o . -r -f wasm-wasmedge
+RUN cd youki && ./scripts/build.sh -o . -r -f wasm-wasmedge && chmod +x youki/youki
 
 FROM debian:trixie AS final
 COPY --from=build /builder/youki/youki /builder/youki/youki

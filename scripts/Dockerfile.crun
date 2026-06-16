@@ -9,7 +9,10 @@ RUN apt-get update -qq && apt-get install -y -qq \
     libprotobuf-c-dev protobuf-c-compiler protobuf-compiler libgcrypt20-dev \
     python3-protobuf go-md2man libtool autoconf python3 automake bison \
     golang-github-checkpoint-restore-go-criu-dev libcudart12 libcriu-dev \
-    jq gawk gperf flex libjson-c-dev
+    jq gawk gperf flex libjson-c-dev libprotobuf-c-dev
+
+# Add in later debian version
+# libblake3-dev
 
 # Build Args
 ARG WasmEdgeApiVersion=0.1.1
@@ -29,7 +32,7 @@ RUN --mount=type=cache,target=/builder/libkrun/target/ cd libkrun && make && mak
 RUN source $HOME/.wasmedge/env \
     && cd crun \
     && ./autogen.sh \
-    && ./configure --with-wasmedge --with-libkrun \
+    && ./configure --with-wasmedge --with-libkrun --enable-embedded-blake3 \
     && make -j $(nproc) \
     && mkdir -p wasmlibs \
     && mkdir -p krunlibs \
@@ -42,6 +45,6 @@ RUN source $HOME/.wasmedge/env \
 
 RUN cp crun/crun*.tar.gz .
 
-FROM rust:1-trixie AS final
-WORKDIR /builder
-COPY --from=build /builder/crun-*.tar.gz /builder
+# FROM rust:1-trixie AS final
+# WORKDIR /builder
+# COPY --from=build /builder/crun-*.tar.gz /builder

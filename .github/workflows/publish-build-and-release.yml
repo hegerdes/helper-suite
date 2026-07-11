@@ -487,9 +487,6 @@ jobs:
             This plugin implements the [kubernetes credential-provider-api](https://kubernetes.io/docs/reference/config-api/kubelet-credentialprovider.v1/). This allows users to pull images from the ecr registries without having to create and reference a `image-pull-secret` in every namespace and deployment.
             This release was build at [ecr-credential-provider@${{ steps.metadata.outputs.ECR_CP_REPO_HASH }}](https://github.com/kubernetes/cloud-provider-aws/tree/${{ steps.metadata.outputs.ECR_CP_REPO_HASH }})
 
-            For youki to work with wasm you need to install wasmedge, set the lib path for wasm via
-            `LD_LIBRARY_PATH` and set wasm in the `config.json` file. See these [instructions](https://wasmedge.org/docs/develop/deploy/oci-runtime/youki/) for how-to do so.
-
             ## Pigz
             A parallel implementation of gzip for modern multi-processor, multi-core machines.
             You can most likely use the version form your package manager when you are on linux. But for windows there is no official release, so you can use this one.

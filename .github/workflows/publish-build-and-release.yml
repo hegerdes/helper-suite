@@ -278,7 +278,7 @@ jobs:
           echo "RELEASE_VERSION=$(date +'%Y.%m.%d')" >> "$GITHUB_OUTPUT"
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: cloud-provider-aws/go.mod
 

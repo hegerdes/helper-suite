@@ -19,7 +19,8 @@ KUBE_APISERVER_EXTRA_ARGS=${KUBE_APISERVER_EXTRA_ARGS:-}
 
 echo "Running as user: $(id -un):$(id -gn)"
 if [ "$(id -u)" -eq 0 ]; then
-        USER_DIR_PREFIX=/root
+        USER_DIR_PREFIX=/tmp
+        cp csr.conf $USER_DIR_PREFIX/csr.conf
     else
         USER_DIR_PREFIX=/tmp/home/kube
         mkdir -p $USER_DIR_PREFIX

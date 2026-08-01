@@ -1,6 +1,6 @@
 FROM alpine:3.24 AS build
-ARG KUBE_VERSION=1.36.2
-ARG ETCD_VERSION=3.7.0
+ARG KUBE_VERSION=1.36.3
+ARG ETCD_VERSION=3.7.1
 ENV ETCDCTL_API=3
 
 # Install kubeapiserver, etcd and kubectl

@@ -41,7 +41,7 @@ mkdir -p -m 700 $ETCD_DATA_DIR
 
 # User credentials
 if [ ! -f "$CERTS_DIR/token.csv" ]; then
-    echo "Createn token.csv file"
+    echo "Creating token.csv file"
     echo "Users:"
     echo $USER_TOKENS
     echo $USER_TOKENS >$CERTS_DIR/token.csv

@@ -16,7 +16,7 @@ RUN apt-get update -qq && apt-get install -y -qq \
 
 # Build Args
 ARG WasmEdgeApiVersion=0.1.1
-ARG LibKrunVersion=main
+ARG LibKrunVersion=stable-1.19.x
 ARG CrunVersion=main
 
 # Install wasmedge
@@ -28,6 +28,7 @@ WORKDIR /builder
 RUN git clone --branch ${CrunVersion} --depth 20 https://github.com/containers/crun.git
 RUN git clone --branch ${LibKrunVersion} --depth 20 https://github.com/containers/libkrun.git
 
+RUN rustup target add $(uname -m)-unknown-linux-musl && rustup component add rustfmt
 RUN --mount=type=cache,target=/builder/libkrun/target/ cd libkrun && make && make install
 RUN source $HOME/.wasmedge/env \
     && cd crun \
